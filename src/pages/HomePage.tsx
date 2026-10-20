@@ -341,10 +341,10 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Concise Timeline */}
-        <div className="relative border-l border-[#211F1C]/20 ml-3 sm:ml-6 pl-6 sm:pl-8 space-y-8">
+        <div className="relative border-l-2 border-[#A84E36]/30 ml-4 sm:ml-6 pl-5 sm:pl-8 space-y-8">
           {TIMELINE_DATA.map((milestone) => (
             <div key={milestone.id} className="relative group">
-              <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#F7F4ED] border-2 border-[#A84E36] group-hover:bg-[#A84E36] transition-colors" />
+              <div className="absolute -left-[27px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#F7F4ED] border-2 border-[#A84E36] group-hover:bg-[#A84E36] transition-colors" />
 
               <div className="flex items-baseline gap-3">
                 <span className={`text-xl font-bold text-[#211F1C] tabular-nums group-hover:text-[#A84E36] transition-colors ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>

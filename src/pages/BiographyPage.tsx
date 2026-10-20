@@ -5,7 +5,6 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { TimelineItem } from '../components/cards/TimelineItem';
 import { TIMELINE_DATA } from '../data/archiveData';
 import {
-  AlertCircle,
   ArrowRight,
   BookOpen,
   Stethoscope,
@@ -26,9 +25,7 @@ export const BiographyPage: React.FC = () => {
   const biographicalLedger = [
     {
       label: isBn ? 'জন্ম রেকর্ড' : 'Birth Record',
-      value: isBn
-        ? '১৯৫৩ সালে রংপুরে জন্ম (দাপ্তরিক সনদে ভিন্ন একটি তারিখও রয়েছে)'
-        : 'Born in Rangpur, 1953 (Official certificate records a variant date)',
+      value: isBn ? '১৯৫৩ সালে রংপুরে জন্ম' : 'Born in Rangpur, 1953',
     },
     {
       label: isBn ? 'মাধ্যমিক শিক্ষা' : 'Secondary Education',
@@ -164,15 +161,6 @@ export const BiographyPage: React.FC = () => {
           </div>
         }
       />
-
-      {/* Note on Differing Birth Dates */}
-      <div className="mb-10 p-4 bg-white/80 border border-[#211F1C]/15 rounded-xs flex items-start gap-3 text-xs text-[#625D52] font-sans">
-        <AlertCircle className="w-4 h-4 text-[#A84E36] shrink-0 mt-0.5" />
-        <div>
-          <strong className="font-semibold text-[#211F1C]">{t('bio.birthNoticeTitle')}</strong>{' '}
-          {t('bio.birthNotice')}
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start mb-16">
         {/* Main Content Area: Concise Timeline or Compact Chapters (8 cols) */}

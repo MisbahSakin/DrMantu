@@ -49,31 +49,31 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     <div
       role="group"
       aria-label="Language selection / ভাষা নির্বাচন"
-      className={`inline-flex items-center border border-[#211F1C]/20 bg-white/80 rounded-xs text-xs font-medium overflow-hidden shadow-2xs ${className}`}
+      className={`inline-flex items-center border border-[#211F1C]/20 bg-white/90 rounded-xs text-[11px] sm:text-xs font-medium overflow-hidden shadow-2xs ${className}`}
     >
       <button
         type="button"
         onClick={() => setLanguage('bn')}
-        className={`px-3 py-1.5 transition-all font-bengali-heading focus-visible:outline-2 focus-visible:outline-[#A84E36] ${
+        className={`px-2 sm:px-3 py-1 sm:py-1.5 transition-all font-bengali-heading focus-visible:outline-2 focus-visible:outline-[#A84E36] ${
           language === 'bn'
             ? 'bg-[#211F1C] text-white font-semibold'
-            : 'text-[#625D52] hover:text-[#211F1C] hover:bg-[#EAE4D8]/50'
+            : 'text-[#625D52] hover:text-[#211F1C] hover:bg-[#EAE4D8]/50 active:bg-[#DDD6C8]'
         }`}
         aria-label="বাংলা ভাষায় দেখুন"
         aria-pressed={language === 'bn'}
       >
         বাংলা
       </button>
-      <span className="text-[#211F1C]/20 select-none font-mono" aria-hidden="true">
+      <span className="text-[#211F1C]/25 select-none font-mono text-[10px] sm:text-xs px-0.5" aria-hidden="true">
         |
       </span>
       <button
         type="button"
         onClick={() => setLanguage('en')}
-        className={`px-3 py-1.5 transition-all font-sans focus-visible:outline-2 focus-visible:outline-[#A84E36] ${
+        className={`px-2 sm:px-3 py-1 sm:py-1.5 transition-all font-sans focus-visible:outline-2 focus-visible:outline-[#A84E36] ${
           language === 'en'
             ? 'bg-[#211F1C] text-white font-semibold'
-            : 'text-[#625D52] hover:text-[#211F1C] hover:bg-[#EAE4D8]/50'
+            : 'text-[#625D52] hover:text-[#211F1C] hover:bg-[#EAE4D8]/50 active:bg-[#DDD6C8]'
         }`}
         aria-label="View in English"
         aria-pressed={language === 'en'}

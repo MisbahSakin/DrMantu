@@ -15,6 +15,23 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ item, className = '' }
   const { isBn, t, formatNumber } = useLanguage();
   const { getPublishedGalleryItem } = useAdmin();
 
+  // Lock body scroll while archival inspection modal is open
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
   // Retrieve published image if an administrator published one for this accession or id
   const publishedImage = getPublishedGalleryItem(item.id) || getPublishedGalleryItem(item.accessionNo);
 
@@ -124,16 +141,16 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ item, className = '' }
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-[#211F1C]/80 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#211F1C]/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="bg-[#F7F4ED] text-[#211F1C] max-w-2xl w-full border border-[#211F1C]/20 shadow-2xl p-6 sm:p-8 rounded-xs relative"
+            className="bg-[#F7F4ED] text-[#211F1C] max-w-2xl w-full max-h-[90dvh] overflow-y-auto border border-[#211F1C]/20 shadow-2xl p-5 sm:p-8 rounded-xs relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute right-5 top-5 p-1.5 text-[#625D52] hover:text-[#211F1C] rounded-xs hover:bg-[#EAE4D8]"
+              className="absolute right-3 sm:right-5 top-3 sm:top-5 min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-[#625D52] hover:text-[#211F1C] rounded-xs hover:bg-[#EAE4D8] active:bg-[#DDD6C8] transition-colors"
               aria-label={t('gallery.closeDialog')}
             >
               <X className="w-5 h-5" />

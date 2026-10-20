@@ -16,7 +16,6 @@ export const ARCHIVE_META = {
   taglineEn: 'A Life in Healing, Literature, Music and Service',
   taglineBn: 'চিকিৎসা, সাহিত্য, সংগীত ও জনসেবায় এক জীবন',
   birthYear: '1953',
-  birthYearNote: 'Official certificate records a variant date',
   birthplace: 'Rangpur, Bangladesh',
   education: [
     {
@@ -639,9 +638,9 @@ export const TIMELINE_DATA: TimelineEvent[] = [
     location: 'Rangpur, East Bengal',
     locationBn: 'রংপুর, পূর্ব বাংলা',
     description:
-      'Born in Rangpur in 1953. Note: An official certificate records a variant date.',
+      'Born in Rangpur in 1953.',
     descriptionBn:
-      '১৯৫৩ সালে রংপুরে জন্ম (দাপ্তরিক সনদে ভিন্ন একটি তারিখও রয়েছে)।',
+      '১৯৫৩ সালে রংপুরে জন্ম।',
   },
   {
     id: 'm-2',

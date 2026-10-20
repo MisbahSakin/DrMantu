@@ -54,6 +54,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
+  // Lock body scroll when admin mobile drawer is active
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mobileMenuOpen]);
+
   if (!isAuthenticated) {
     return <AdminLoginPage />;
   }
@@ -290,10 +300,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* Top Bar */}
           <header className="h-16 bg-[#F7F4ED] border-b border-[#211F1C]/15 px-4 sm:px-8 flex items-center justify-between gap-4 sticky top-0 z-30">
             {/* Left: Mobile hamburger & Breadcrumbs */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-1.5 text-[#625D52] hover:text-[#211F1C] rounded-xs"
+                className="md:hidden min-h-[44px] min-w-[44px] p-2 text-[#625D52] hover:text-[#211F1C] active:bg-[#EAE4D8] rounded-xs flex items-center justify-center"
                 aria-label="Open navigation menu"
               >
                 <Menu className="w-5 h-5" />
@@ -416,7 +426,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   <p className="text-xs text-[#625D52] mt-1 font-sans">{subtitle}</p>
                 )}
               </div>
-              {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+              {actions && <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">{actions}</div>}
             </div>
 
             {/* Page Children */}

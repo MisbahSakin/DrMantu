@@ -45,7 +45,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <FieldWrapper label={label} labelBn={labelBn} error={error} helperText={helperText} required={required}>
         <input
           ref={ref}
-          className={`w-full px-3.5 py-2 text-sm bg-white/80 border ${
+          className={`w-full px-3.5 py-2.5 sm:py-2 text-base sm:text-sm bg-white/80 border ${
             error ? 'border-[#A84E36]' : 'border-[#211F1C]/20'
           } rounded-xs text-[#211F1C] placeholder:text-[#8A8375]/60 transition-colors focus:bg-white focus:border-[#A84E36] focus-visible:outline-2 focus-visible:outline-[#A84E36] disabled:bg-[#EAE4D8]/50 disabled:cursor-not-allowed ${className}`}
           {...props}
@@ -65,7 +65,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           rows={rows}
-          className={`w-full px-3.5 py-2 text-sm bg-white/80 border ${
+          className={`w-full px-3.5 py-2.5 sm:py-2 text-base sm:text-sm bg-white/80 border ${
             error ? 'border-[#A84E36]' : 'border-[#211F1C]/20'
           } rounded-xs text-[#211F1C] placeholder:text-[#8A8375]/60 transition-colors focus:bg-white focus:border-[#A84E36] focus-visible:outline-2 focus-visible:outline-[#A84E36] disabled:bg-[#EAE4D8]/50 disabled:cursor-not-allowed resize-y ${className}`}
           {...props}
@@ -91,7 +91,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       <FieldWrapper label={label} labelBn={labelBn} error={error} helperText={helperText} required={required}>
         <select
           ref={ref}
-          className={`w-full px-3.5 py-2 text-sm bg-white/80 border ${
+          className={`w-full px-3.5 py-2.5 sm:py-2 text-base sm:text-sm bg-white/80 border ${
             error ? 'border-[#A84E36]' : 'border-[#211F1C]/20'
           } rounded-xs text-[#211F1C] transition-colors focus:bg-white focus:border-[#A84E36] focus-visible:outline-2 focus-visible:outline-[#A84E36] disabled:bg-[#EAE4D8]/50 disabled:cursor-not-allowed ${className}`}
           {...props}

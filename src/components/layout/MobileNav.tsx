@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { X, BookOpen, User, Feather, Activity, Music, Image, Award, Mail, Shield } from 'lucide-react';
+import { X, BookOpen, User, Feather, Activity, Music, Image, Award, Mail } from 'lucide-react';
 import { ARCHIVE_META } from '../../data/archiveData';
 import { useLanguage } from '../../context/LanguageContext';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
@@ -13,6 +13,23 @@ interface MobileNavProps {
 export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
   const { isBn, t } = useLanguage();
+
+  // Lock body scroll and handle Escape key while mobile drawer is open
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -45,18 +62,18 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
       {/* Drawer */}
       <div className="relative w-full max-w-xs bg-[#F7F4ED] text-[#211F1C] h-full shadow-2xl flex flex-col z-10 border-r border-[#211F1C]/15 overflow-y-auto">
         {/* Drawer Header */}
-        <div className="p-5 border-b border-[#211F1C]/10 flex items-center justify-between">
-          <div>
-            <div className={`text-base font-bold text-[#211F1C] ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
+        <div className="p-4 sm:p-5 border-b border-[#211F1C]/10 flex items-center justify-between">
+          <div className="min-w-0 pr-2">
+            <div className={`text-base font-bold text-[#211F1C] truncate ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
               {isBn ? ARCHIVE_META.nameBn : ARCHIVE_META.nameEn}
             </div>
-            <div className="text-xs text-[#625D52]">
+            <div className="text-xs text-[#625D52] truncate">
               {isBn ? ARCHIVE_META.nameEn : ARCHIVE_META.nameBn}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-[#625D52] hover:text-[#211F1C] rounded-xs"
+            className="min-h-[44px] min-w-[44px] p-2 text-[#625D52] hover:text-[#211F1C] rounded-xs flex items-center justify-center hover:bg-[#EAE4D8]/60 active:bg-[#DDD6C8]"
             aria-label={isBn ? "মেনু বন্ধ করুন" : "Close navigation"}
           >
             <X className="w-5 h-5" />
@@ -81,10 +98,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
                 key={route.path}
                 to={route.path}
                 onClick={onClose}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xs text-sm transition-colors ${
+                className={`flex items-center justify-between px-3.5 py-2.5 min-h-[44px] rounded-xs text-sm transition-colors active:scale-[0.99] ${
                   isActive
-                    ? 'bg-[#A84E36] text-white font-medium'
-                    : 'text-[#211F1C] hover:bg-[#EAE4D8]/60 hover:text-[#A84E36]'
+                    ? 'bg-[#A84E36] text-white font-medium shadow-xs'
+                    : 'text-[#211F1C] hover:bg-[#EAE4D8]/60 hover:text-[#A84E36] active:bg-[#DDD6C8]'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -98,18 +115,6 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
             );
           })}
         </nav>
-
-        {/* Admin Link at Drawer Footer */}
-        <div className="p-4 border-t border-[#211F1C]/10 bg-[#EAE4D8]/40">
-          <Link
-            to="/admin"
-            onClick={onClose}
-            className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#625D52] hover:text-[#211F1C] rounded-xs"
-          >
-            <Shield className="w-4 h-4 text-[#8A8375]" />
-            <span>{isBn ? 'অ্যাডমিন ড্যাশবোর্ড' : 'Archive Admin Console'}</span>
-          </Link>
-        </div>
       </div>
     </div>
   );

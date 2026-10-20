@@ -27,18 +27,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   const subTitle = isBn ? (titleBn && title !== titleBn ? title : undefined) : titleBn;
 
   return (
-    <header className={`border-b border-[#211F1C]/10 pb-8 mb-10 pt-4 ${className}`}>
-      {breadcrumbs && <Breadcrumb items={breadcrumbs} className="mb-4" />}
+    <header className={`border-b border-[#211F1C]/10 pb-6 sm:pb-8 mb-6 sm:mb-10 pt-2 sm:pt-4 ${className}`}>
+      {breadcrumbs && <Breadcrumb items={breadcrumbs} className="mb-3 sm:mb-4" />}
 
       {kicker && (
-        <div className="text-xs uppercase tracking-widest text-[#A84E36] font-semibold mb-2 font-sans">
+        <div className="text-[11px] sm:text-xs uppercase tracking-widest text-[#A84E36] font-semibold mb-2 font-sans">
           {kicker}
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
         <div className="max-w-3xl">
-          <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-semibold leading-[1.15] text-[#211F1C] text-balance ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
+          <h1 className={`text-2xl sm:text-4xl lg:text-5xl font-semibold leading-[1.2] sm:leading-[1.15] text-[#211F1C] text-balance ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
             {mainTitle}
           </h1>
           {subTitle && (

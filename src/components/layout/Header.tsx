@@ -25,36 +25,36 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className="sticky top-0 z-40 bg-[#F7F4ED]/95 backdrop-blur-xs border-b border-[#211F1C]/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 xl:gap-8 h-20">
-            {/* Zone 1: Brand wordmark */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-2 sm:gap-4 xl:gap-8 h-16 sm:h-20">
+            {/* Zone 1: Brand wordmark (responsive and overflow-safe on small mobile) */}
             <Link
               to="/"
-              className="group flex flex-col whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-[#A84E36] focus-visible:outline-offset-4 rounded-xs"
+              className="group flex flex-col shrink min-w-0 pr-1 focus-visible:outline-2 focus-visible:outline-[#A84E36] focus-visible:outline-offset-4 rounded-xs"
               aria-label={isBn ? "মূল পাতা - ডা. মোঃ মফিজুল ইসলাম মান্টু আর্কাইভ" : "Home - Dr. Md. Mofizul Islam Mantu Archive"}
             >
               {isBn ? (
                 <>
-                  <span className="font-bengali-heading text-lg sm:text-2xl font-bold tracking-tight text-[#211F1C] group-hover:text-[#A84E36] transition-colors leading-tight">
+                  <span className="font-bengali-heading text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-[#211F1C] group-hover:text-[#A84E36] transition-colors leading-tight truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
                     {ARCHIVE_META.nameBn}
                   </span>
-                  <span className="font-serif text-xs text-[#625D52] tracking-normal -mt-0.5">
+                  <span className="font-serif text-[11px] sm:text-xs text-[#625D52] tracking-normal -mt-0.5 truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
                     {ARCHIVE_META.nameEn}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-[#211F1C] group-hover:text-[#A84E36] transition-colors leading-tight">
+                  <span className="font-serif text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-[#211F1C] group-hover:text-[#A84E36] transition-colors leading-tight truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
                     {ARCHIVE_META.nameEn}
                   </span>
-                  <span className="font-bengali-text text-xs text-[#625D52] tracking-normal -mt-0.5">
+                  <span className="font-bengali-text text-[11px] sm:text-xs text-[#625D52] tracking-normal -mt-0.5 truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
                     {ARCHIVE_META.nameBn}
                   </span>
                 </>
               )}
             </Link>
 
-            {/* Zone 2: Navigation Links */}
+            {/* Zone 2: Navigation Links (Desktop) */}
             <nav className="hidden lg:flex items-center gap-3 xl:gap-5 text-xs xl:text-sm font-medium text-[#625D52]">
               {navLinks.map((link) => {
                 const isActive = location.pathname.startsWith(link.path);
@@ -76,8 +76,8 @@ export const Header: React.FC = () => {
             </nav>
 
             {/* Zone 3: Language Switcher + Catalog button + mobile toggle */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {/* Prominent, elegant language switcher */}
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+              {/* Prominent language switcher */}
               <LanguageSwitcher />
 
               <Link
@@ -88,11 +88,11 @@ export const Header: React.FC = () => {
                 <span>{t('nav.viewCatalog')}</span>
               </Link>
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button with 44px tap target */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 text-[#211F1C] hover:bg-[#EAE4D8] rounded-xs transition-colors focus-visible:outline-2 focus-visible:outline-[#A84E36]"
+                className="lg:hidden min-h-[44px] min-w-[44px] p-2 text-[#211F1C] hover:bg-[#EAE4D8] active:bg-[#DDD6C8] rounded-xs transition-colors flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#A84E36]"
                 aria-label={isBn ? "মেনু খুলুন" : "Open navigation menu"}
               >
                 <Menu className="w-6 h-6" />

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ARCHIVE_META } from '../../data/archiveData';
-import { Shield } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const Footer: React.FC = () => {
@@ -25,7 +24,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Essential Nav Columns */}
-          <div className="md:col-span-7 grid grid-cols-3 gap-6 text-xs font-sans">
+          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 text-xs font-sans">
             <div>
               <span className="font-semibold uppercase tracking-wider text-[#A84E36] block mb-2.5">
                 {t('footer.colBio')}
@@ -90,12 +89,6 @@ export const Footer: React.FC = () => {
                 <li>
                   <Link to="/contact" className="hover:text-[#211F1C] hover:underline transition-colors">
                     {t('footer.inquiries')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/admin" className="hover:text-[#211F1C] hover:underline transition-colors inline-flex items-center gap-1 text-[#8A8375]">
-                    <Shield className="w-3 h-3" />
-                    <span>{t('footer.admin')}</span>
                   </Link>
                 </li>
               </ul>

@@ -72,3 +72,30 @@
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Mobile Touch & Scroll Optimizations */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Hide scrollbar for clean horizontal category strips while maintaining swipeability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area support for notched phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

@@ -26,7 +26,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
   if (layout === 'row') {
     return (
       <article
-        className={`group py-4 border-b border-[#211F1C]/10 flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 sm:gap-6 transition-colors hover:bg-[#EAE4D8]/20 px-3 -mx-3 rounded-xs ${className}`}
+        className={`group py-4 border-b border-[#211F1C]/10 flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 sm:gap-6 transition-colors hover:bg-[#EAE4D8]/20 px-2 sm:px-3 sm:-mx-3 rounded-xs ${className}`}
       >
         <div className="flex-1 max-w-3xl">
           <div className="flex items-center gap-2 mb-1.5">

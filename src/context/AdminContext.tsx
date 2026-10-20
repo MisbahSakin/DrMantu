@@ -403,13 +403,23 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // ignore
     }
-    return true; // Authorized session
+    return false; // Secure default: require explicit authentication
   });
 
-  const [currentUser, setCurrentUser] = useState<AdminUser | null>({
-    name: 'Misbah Sakin',
-    email: 'curator@drmofizulmantu.org',
-    role: 'Administrator',
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => {
+    try {
+      const storedAuth = localStorage.getItem('mantu_admin_auth_v2');
+      if (storedAuth === 'true') {
+        return {
+          name: 'Misbah Sakin',
+          email: 'curator@drmofizulmantu.org',
+          role: 'Administrator',
+        };
+      }
+    } catch {
+      // ignore
+    }
+    return null;
   });
 
   const login = (passcode?: string): boolean => {

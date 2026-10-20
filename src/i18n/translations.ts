@@ -17,7 +17,6 @@ export const translations = {
   'nav.gallery': { bn: 'চিত্রশালা ও দলিল', en: 'Gallery' },
   'nav.awards': { bn: 'স্বীকৃতি ও সম্মাননা', en: 'Awards' },
   'nav.contact': { bn: 'যোগাযোগ', en: 'Contact' },
-  'nav.admin': { bn: 'অ্যাডমিন', en: 'Admin' },
   'nav.viewCatalog': { bn: 'গ্রন্থতালিকা', en: 'View Catalog' },
   'nav.exploreLife': { bn: 'জীবনালেখ্য দেখুন', en: 'Explore His Life' },
   'nav.exploreWorks': { bn: 'গ্রন্থসমগ্র দেখুন', en: 'Explore His Works' },
@@ -70,8 +69,8 @@ export const translations = {
     en: 'A life woven into medicine, literature, music, and regional history',
   },
   'home.bioP1': {
-    bn: '১৯৫৩ সালে রংপুরে জন্ম (দাপ্তরিক সনদে ভিন্ন একটি তারিখও রয়েছে)। শিক্ষাজীবনে তিনি রংপুর মেডিকেল কলেজে চিকিৎসাবিজ্ঞান পাঠের (১৯৭১–১৯৭৬) পাশাপাশি রংপুর সঙ্গীত একাডেমিতে আট বছরব্যাপী মার্গ সঙ্গীতের গভীর তালিম গ্রহণ করেন (১৯৬৮–১৯৭৬)।',
-    en: 'Born in Rangpur in 1953 (with an official certificate recording a variant date), Dr. Md. Mofizul Islam Mantu combined rigorous medical study at Rangpur Medical College (1971–1976) with eight years of classical vocal education at Rangpur Sangeet Academy (1968–1976).',
+    bn: '১৯৫৩ সালে রংপুরে জন্ম। শিক্ষাজীবনে তিনি রংপুর মেডিকেল কলেজে চিকিৎসাবিজ্ঞান পাঠের (১৯৭১–১৯৭৬) পাশাপাশি রংপুর সঙ্গীত একাডেমিতে আট বছরব্যাপী মার্গ সঙ্গীতের গভীর তালিম গ্রহণ করেন (১৯৬৮–১৯৭৬)।',
+    en: 'Born in Rangpur in 1953, Dr. Md. Mofizul Islam Mantu combined rigorous medical study at Rangpur Medical College (1971–1976) with eight years of classical vocal education at Rangpur Sangeet Academy (1968–1976).',
   },
   'home.bioP2': {
     bn: '১৯৭৮ সালে বাংলাদেশে চিকিৎসাসেবা শুরু এবং ১৯৮৪ থেকে ১৯৯২ পর্যন্ত ইরানে আট বছরের আন্তর্জাতিক হাসপাতাল সেবার পর তিনি রংপুরে ফিরে পারিবারিক চিকিৎসা শুরু করেন। সেবার পাশাপাশি তিনি স্বাস্থ্যসেবা উপদেষ্টা (২০০৪–২০০৯) এবং শিক্ষকতায় (২০১০–২০২০) সক্রিয় ছিলেন এবং কবিতা, ছড়া ও আঞ্চলিক ইতিহাসের আকর গ্রন্থ রচনা করেছেন।',
@@ -155,11 +154,6 @@ export const translations = {
   },
   'bio.tabTimeline': { bn: 'সময়রেখা ভিউ', en: 'Timeline View' },
   'bio.tabChapters': { bn: 'অধ্যায় সংক্ষেপ', en: 'Summary Chapters' },
-  'bio.birthNoticeTitle': { bn: 'আর্কাইভ রেকর্ড নোট:', en: 'Archival Record Note:' },
-  'bio.birthNotice': {
-    bn: 'জীবনী বিবরণীতে তাঁর জন্ম ১৯৫৩ সালে রংপুরে লিপিবদ্ধ। প্রাতিষ্ঠানিক একটি সনদে ভিন্ন একটি তারিখও রয়েছে; উভয় তথ্যই ঐতিহাসিকভাবে সংরক্ষিত।',
-    en: 'Primary biographical accounts record his birth in Rangpur in 1953. An official institutional certificate records a variant date; both records are preserved for archival accuracy.',
-  },
   'bio.timelineHeading': { bn: 'কালানুক্রমিক সময়রেখা', en: 'Chronological Timeline' },
   'bio.timelineSub': {
     bn: 'শিক্ষা থেকে চিকিৎসা সেবা, ইরান প্রবাস এবং সাহিত্য গবেষণার ঐতিহাসিক পর্যায়ক্রম।',
@@ -419,7 +413,6 @@ export const translations = {
   'footer.musicCulture': { bn: 'সঙ্গীত ও সংস্কৃতি', en: 'Music & Culture' },
   'footer.docGallery': { bn: 'চিত্রশালা ও স্মারক', en: 'Document Gallery' },
   'footer.inquiries': { bn: 'গবেষণা অনুসন্ধান', en: 'Research Inquiries' },
-  'footer.admin': { bn: 'অ্যাডমিন', en: 'Admin' },
   'footer.copyright': { bn: 'ডা. মোঃ মফিজুল ইসলাম মান্টু স্মৃতি সংরক্ষণ উদ্যোগ। রংপুর, বাংলাদেশ।', en: 'The Dr. Md. Mofizul Islam Mantu Archive. Rangpur, Bangladesh.' },
   'footer.project': { bn: 'ঐতিহাসিক ও সাহিত্য স্মারক মহাফেজখানা', en: 'Historical & Literary Archive' },
 

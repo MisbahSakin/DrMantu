@@ -25,9 +25,9 @@ export const Layout: React.FC<LayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F4ED] text-[#211F1C]">
+    <div className="min-h-screen flex flex-col bg-[#F7F4ED] text-[#211F1C] w-full overflow-x-clip">
       <Header />
-      <main className={`flex-1 py-8 sm:py-12 ${widthClasses[containerWidth]}`}>
+      <main className={`flex-1 py-6 sm:py-10 ${widthClasses[containerWidth]}`}>
         {children}
       </main>
       <Footer />
