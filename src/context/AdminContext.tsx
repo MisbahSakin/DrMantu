@@ -813,7 +813,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       reader.onload = () => {
         const dataUrl = reader.result as string;
         const img = new Image();
-        img.onload = () => {
+        img.onload = async () => {
           const width = img.naturalWidth;
           const height = img.naturalHeight;
           const ratio = width / height;
@@ -826,6 +826,28 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const sizeFormatted = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
           const newId = `media-${Date.now()}`;
           const today = new Date().toISOString().split('T')[0];
+
+          // Upload to Vercel Blob storage if available, otherwise retain inline data URL
+          let targetUrl = dataUrl;
+          try {
+            const uploadRes = await fetch('/api/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                filename: file.name,
+                dataUrl,
+                contentType: file.type,
+              }),
+            });
+            if (uploadRes.ok) {
+              const uploadData = await uploadRes.json();
+              if (uploadData.url) {
+                targetUrl = uploadData.url;
+              }
+            }
+          } catch {
+            // Fallback silently to dataUrl in offline/local environments
+          }
 
           const newItem: AdminMediaItem = {
             id: newId,
@@ -844,7 +866,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             aspectRatio: detectedAspect,
             uploadedAt: today,
             previewColor: '#DDD6C8',
-            url: dataUrl,
+            url: targetUrl,
             status: payload.status,
             assignment: {
               section: payload.section,
@@ -869,7 +891,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (payload.section === 'books' && payload.targetId) {
             setBooks((prevBooks) =>
               prevBooks.map((b) =>
-                b.slug === payload.targetId ? { ...b, coverImage: dataUrl } : b
+                b.slug === payload.targetId ? { ...b, coverImage: targetUrl } : b
               )
             );
           }
@@ -918,17 +940,38 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       reader.onload = () => {
         const dataUrl = reader.result as string;
         const img = new Image();
-        img.onload = () => {
+        img.onload = async () => {
           const width = img.naturalWidth;
           const height = img.naturalHeight;
           const sizeFormatted = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+          let targetUrl = dataUrl;
+          try {
+            const uploadRes = await fetch('/api/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                filename: file.name,
+                dataUrl,
+                contentType: file.type,
+              }),
+            });
+            if (uploadRes.ok) {
+              const uploadData = await uploadRes.json();
+              if (uploadData.url) {
+                targetUrl = uploadData.url;
+              }
+            }
+          } catch {
+            // Fallback silently to dataUrl in offline/local environments
+          }
 
           setMediaItems((prev) =>
             prev.map((m) =>
               m.id === id
                 ? {
                     ...m,
-                    url: dataUrl,
+                    url: targetUrl,
                     fileSize: sizeFormatted,
                     dimensions: `${width} × ${height} px`,
                   }
@@ -940,7 +983,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (current?.assignment.section === 'books' && current.assignment.targetId) {
             setBooks((prev) =>
               prev.map((b) =>
-                b.slug === current.assignment.targetId ? { ...b, coverImage: dataUrl } : b
+                b.slug === current.assignment.targetId ? { ...b, coverImage: targetUrl } : b
               )
             );
           }

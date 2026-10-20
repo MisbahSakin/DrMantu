@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/bcryptjs": "^3.0.0",
     "@types/cookie-parser": "^1.4.10",
+    "@vercel/blob": "^2.8.2",
     "@vitejs/plugin-react": "^6.1.1",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",

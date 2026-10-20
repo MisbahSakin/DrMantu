@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { put } from '@vercel/blob';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,10 +24,11 @@ const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'curator@drmofizulmantu.org').to
 const AUTH_SECRET = process.env.AUTH_SECRET || 'mantu_archive_default_secure_secret_2026_dev_key';
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
 
-// Default secure bcrypt hash for development if not provided in environment
-// Corresponds to standard dev passkey 'ArchiveCurator2026!'
+// Supports either plain ADMIN_PASSWORD in environment or bcrypt ADMIN_PASSWORD_HASH
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+// Default secure bcrypt hash for development if not provided in environment ('ArchiveCurator2026!')
 const DEFAULT_DEV_HASH = '$2b$10$vK9dVFUCVqOUyb.0IJeeHuMYi/zdmErcZ4HV3E6/VYqOvpYKQMFdW';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || DEFAULT_DEV_HASH;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || (ADMIN_PASSWORD ? '' : DEFAULT_DEV_HASH);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -219,6 +221,55 @@ app.post('/api/contact', (req: Request, res: Response): void => {
   });
 });
 
+// Admin Image Upload with Vercel Blob Storage Integration
+app.post('/api/upload', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { filename, dataUrl, contentType } = req.body;
+    if (!dataUrl) {
+      res.status(400).json({ error: 'Missing image data URL.' });
+      return;
+    }
+
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!blobToken) {
+      // Fallback: When Vercel Blob token is not configured, return dataUrl directly
+      res.json({
+        url: dataUrl,
+        provider: 'inline-data-url',
+        message: 'Saved inline. To store on global Vercel Blob CDN, connect Blob store in Vercel Storage tab.',
+      });
+      return;
+    }
+
+    // Extract base64 payload from dataUrl
+    const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      res.status(400).json({ error: 'Invalid data URL format.' });
+      return;
+    }
+
+    const mimeType = matches[1];
+    const buffer = Buffer.from(matches[2], 'base64');
+    const cleanFilename = (filename || `artifact-${Date.now()}.jpg`).replace(/[^a-zA-Z0-9.-]/g, '_');
+
+    const blob = await put(`archive/${cleanFilename}`, buffer, {
+      access: 'public',
+      contentType: contentType || mimeType,
+      token: blobToken,
+    });
+
+    res.json({
+      success: true,
+      url: blob.url,
+      provider: 'vercel-blob',
+      size: buffer.length,
+    });
+  } catch (err: any) {
+    console.error('Vercel Blob upload error:', err);
+    res.status(500).json({ error: err.message || 'Failed to upload to Vercel Blob storage.' });
+  }
+});
+
 // Admin Authentication Login
 app.post('/api/admin/login', loginRateLimiter, async (req: Request, res: Response): Promise<void> => {
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
@@ -243,11 +294,18 @@ app.post('/api/admin/login', loginRateLimiter, async (req: Request, res: Respons
   try {
     let passwordValid = false;
 
-    // Check bcrypt hash
-    if (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$')) {
+    // 1. If plain ADMIN_PASSWORD is set in Vercel environment variables, check with timing-safe comparison
+    if (ADMIN_PASSWORD) {
+      const passBuffer = Buffer.from(String(password));
+      const targetBuffer = Buffer.from(ADMIN_PASSWORD);
+      if (passBuffer.length === targetBuffer.length) {
+        passwordValid = crypto.timingSafeEqual(passBuffer, targetBuffer);
+      }
+    } else if (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$')) {
+      // 2. Check bcrypt hash
       passwordValid = await bcrypt.compare(String(password), ADMIN_PASSWORD_HASH);
     } else {
-      // Direct comparison with crypto.timingSafeEqual for plain secret fallback in dev
+      // 3. Dev fallback comparison
       const passBuffer = Buffer.from(String(password));
       const hashBuffer = Buffer.from(ADMIN_PASSWORD_HASH);
       if (passBuffer.length === hashBuffer.length) {
