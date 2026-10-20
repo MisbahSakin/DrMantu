@@ -14,9 +14,18 @@ import {
   Send,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAdmin } from '../context/AdminContext';
 
 export const ContactPage: React.FC = () => {
   const { isBn, t } = useLanguage();
+  const { settings } = useAdmin();
+
+  const curatorEmail = settings.curatorEmail || 'misbahsakin1@gmail.com';
+  const displayLocation = (isBn && settings.locationBn) ? settings.locationBn : (settings.location || t('contact.addressLocation'));
+  const displayHours = (isBn && settings.researchHoursBn) ? settings.researchHoursBn : (settings.researchHours || t('contact.visitingHours'));
+  const displayCuratorName = (isBn && settings.curatorNameBn) ? settings.curatorNameBn : (settings.curatorName || 'Misbah Sakin (Archive Secretariat)');
+  const displayCitationPolicy = (isBn && settings.citationPolicyBn) ? settings.citationPolicyBn : (settings.citationPolicy || '');
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,7 +47,10 @@ export const ContactPage: React.FC = () => {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          recipientEmail: curatorEmail,
+        }),
       });
 
       if (response.ok) {
@@ -65,7 +77,7 @@ export const ContactPage: React.FC = () => {
     setErrorMessage('');
   };
 
-  const mailtoLink = `mailto:archive@drmofizulmantu.org?subject=${encodeURIComponent(
+  const mailtoLink = `mailto:${curatorEmail}?subject=${encodeURIComponent(
     `[Archive Inquiry] ${formData.subject || 'Scholarly Consultation'}`
   )}&body=${encodeURIComponent(
     `Name: ${formData.name}\nEmail: ${formData.email}\nAffiliation: ${formData.affiliation || 'N/A'}\nInquiry Type: ${formData.inquiryType}\n\nMessage:\n${formData.message}`
@@ -95,10 +107,17 @@ export const ContactPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-[#625D52] max-w-md mx-auto leading-relaxed font-sans">
                 {t('contact.successMsg')}
               </p>
-              <div className="pt-4">
+              <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
                 <Button variant="secondary" size="sm" onClick={handleReset}>
                   {t('contact.testAnother')}
                 </Button>
+                <a
+                  href={mailtoLink}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xs bg-[#A84E36] text-white hover:bg-[#8F3E28] transition-colors shadow-xs"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>{isBn ? 'ইমেইল অ্যাপে কপি করে পাঠান' : 'Open in Email Client'}</span>
+                </a>
               </div>
             </div>
           ) : (
@@ -226,6 +245,25 @@ export const ContactPage: React.FC = () => {
             </h3>
 
             <div className="space-y-4">
+              {/* Secretariat Lead */}
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="w-4 h-4 text-[#A84E36] shrink-0 mt-0.5" />
+                <div>
+                  <strong className={`block text-sm font-semibold text-[#211F1C] ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
+                    {isBn ? 'আর্কাইভ তত্ত্বাবধান ও দফতর' : 'Archive Secretariat & Curation'}
+                  </strong>
+                  <span className="text-[#625D52] block font-medium">
+                    {displayCuratorName}
+                  </span>
+                  {settings.curatorPhone && (
+                    <span className="text-[#8A8375] text-[11px] block mt-0.5 font-mono">
+                      {settings.curatorPhone}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Physical Address */}
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-[#A84E36] shrink-0 mt-0.5" />
                 <div>
@@ -233,11 +271,12 @@ export const ContactPage: React.FC = () => {
                     {t('contact.addressTitle')}
                   </strong>
                   <span className="text-[#625D52] block">
-                    {t('contact.addressLocation')}
+                    {displayLocation}
                   </span>
                 </div>
               </div>
 
+              {/* Direct Curator Email */}
               <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-[#A84E36] shrink-0 mt-0.5" />
                 <div>
@@ -245,14 +284,18 @@ export const ContactPage: React.FC = () => {
                     {t('contact.correspondenceAddress')}
                   </strong>
                   <a
-                    href="mailto:archive@drmofizulmantu.org"
-                    className="text-[#A84E36] hover:underline font-medium"
+                    href={`mailto:${curatorEmail}`}
+                    className="text-[#A84E36] hover:underline font-medium text-xs break-all"
                   >
-                    archive@drmofizulmantu.org
+                    {curatorEmail}
                   </a>
+                  <span className="block text-[11px] text-[#8A8375] mt-0.5">
+                    {isBn ? 'সকল অনুসন্ধান সরাসরি এই ঠিকানায় প্রেরিত হয়।' : 'All inquiries are delivered directly to this mailbox.'}
+                  </span>
                 </div>
               </div>
 
+              {/* Visiting Hours */}
               <div className="flex items-start gap-3">
                 <Clock className="w-4 h-4 text-[#A84E36] shrink-0 mt-0.5" />
                 <div>
@@ -260,7 +303,7 @@ export const ContactPage: React.FC = () => {
                     {t('contact.visitingHoursTitle')}
                   </strong>
                   <span className="text-[#625D52]">
-                    {t('contact.visitingHours')}
+                    {displayHours}
                   </span>
                 </div>
               </div>
@@ -279,6 +322,18 @@ export const ContactPage: React.FC = () => {
               <li>{t('contact.guideline3')}</li>
             </ul>
           </div>
+
+          {/* Archival Citation & Attribution Guidelines (if set in Admin Settings) */}
+          {displayCitationPolicy && (
+            <div className="p-5 bg-white/70 border border-[#211F1C]/15 rounded-xs space-y-2 text-xs font-sans">
+              <strong className="block font-semibold text-[#211F1C]">
+                {isBn ? 'উদ্ধৃতি ও সাইটেশন নির্দেশনা:' : 'Archival Citation & Attribution Policy:'}
+              </strong>
+              <p className="text-[#625D52] italic leading-relaxed">
+                "{displayCitationPolicy}"
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

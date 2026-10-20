@@ -244,11 +244,15 @@ export interface AdminSettings {
   descriptionEn: string;
   descriptionBn: string;
   curatorName: string;
+  curatorNameBn?: string;
   curatorEmail: string;
   curatorPhone: string;
   location: string;
+  locationBn?: string;
   researchHours: string;
+  researchHoursBn?: string;
   citationPolicy: string;
+  citationPolicyBn?: string;
   navLabels: {
     home: string;
     biography: string;

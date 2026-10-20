@@ -305,12 +305,17 @@ const initialSettings: AdminSettings = {
   descriptionBn:
     'চিকিৎসা, সাহিত্য, সংগীত ও জনসেবায় নিবেদিত এক বিরল বহুভাষিক ব্যক্তিত্ব — ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক ও মহাফেজখানা।',
   curatorName: 'Misbah Sakin (Archive Secretariat)',
-  curatorEmail: 'curator@drmofizulmantu.org',
+  curatorNameBn: 'মিসবাহ সাকিন (আর্কাইভ দফতর ও তত্ত্বাবধায়ক)',
+  curatorEmail: 'misbahsakin1@gmail.com',
   curatorPhone: '+880 1711 000000',
   location: 'Radhaballabh, Rangpur Sadar, Rangpur-5400, Bangladesh',
+  locationBn: 'রাধাবল্লভ, রংপুর সদর, রংপুর-৫৪০০, বাংলাদেশ',
   researchHours: 'Sunday through Thursday, 10:00 AM – 4:00 PM (By Academic Appointment)',
+  researchHoursBn: 'রবিবার থেকে বৃহস্পতিবার, সকাল ১০:০০ – বিকাল ৪:০০ (পূর্বানুমতি সাপেক্ষে)',
   citationPolicy:
     'Materials from this archive may be cited in academic research, doctoral dissertations, and literary anthologies with formal credit to the "Dr. Md. Mofizul Islam Mantu Personal Legacy Archive, Rangpur".',
+  citationPolicyBn:
+    'এই মহাফেজখানার দলিল ও প্রকাশনা গবেষণামূলক প্রবন্ধ, পিএইচডি অভিসন্দর্ভ এবং সাহিত্য সংকলনে ব্যবহারের ক্ষেত্রে "ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক আর্কাইভ, রংপুর" হিসেবে সুস্পষ্ট তথ্যসূত্র উল্লেখ করতে হবে।',
   navLabels: {
     home: 'Home (মূল পাতা)',
     biography: 'Biography (জীবনালেখ্য)',
@@ -515,7 +520,17 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [settings, setSettings] = useState<AdminSettings>(() => {
     try {
       const saved = localStorage.getItem('mantu_admin_settings_v2');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...initialSettings,
+          ...parsed,
+          curatorEmail:
+            !parsed.curatorEmail || parsed.curatorEmail === 'curator@drmofizulmantu.org'
+              ? 'misbahsakin1@gmail.com'
+              : parsed.curatorEmail,
+        };
+      }
     } catch {
       // ignore
     }

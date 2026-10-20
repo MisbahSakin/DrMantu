@@ -403,47 +403,88 @@ export const AdminSettingsPage: React.FC = () => {
                 </p>
               </div>
 
+              {/* Curator Identity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Curator Lead Name"
+                  label={isBn ? 'কিউরেটর / তত্ত্বাবধায়কের নাম (English)' : 'Curator Lead Name (English)'}
+                  placeholder="e.g. Misbah Sakin (Archive Secretariat)"
                   value={formState.curatorName}
                   onChange={(e) => setFormState({ ...formState, curatorName: e.target.value })}
                 />
                 <Input
-                  label="Official Curator Email"
+                  label={isBn ? 'কিউরেটর / তত্ত্বাবধায়কের নাম (বাংলা)' : 'Curator Lead Name (Bangla)'}
+                  placeholder="উদাঃ মিসবাহ সাকিন (আর্কাইভ দফতর)"
+                  value={formState.curatorNameBn || ''}
+                  onChange={(e) => setFormState({ ...formState, curatorNameBn: e.target.value })}
+                />
+              </div>
+
+              {/* Contact Dispatch & Inquiries Email */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label={isBn ? 'অফিসিয়াল কিউরেটর ইমেইল (অনুসন্ধান প্রেরণের ঠিকানা)' : 'Official Curator Email (Inquiry Recipient)'}
                   type="email"
                   value={formState.curatorEmail}
                   onChange={(e) => setFormState({ ...formState, curatorEmail: e.target.value })}
+                  helperText={isBn ? 'ওয়েবসাইটের অনুসন্ধান ফর্ম থেকে সকল বার্তা এই ইমেইলে সরাসরি পৌঁছাবে।' : 'All scholarly consultation and archival inquiries from the public form will be sent to this email address.'}
                   required
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Inquiries Telephone / Dispatch"
+                  label={isBn ? 'যোগাযোগ ও বার্তা টেলিফোন' : 'Inquiries Telephone / Dispatch'}
                   value={formState.curatorPhone}
                   onChange={(e) => setFormState({ ...formState, curatorPhone: e.target.value })}
                 />
+              </div>
+
+              {/* Physical Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Physical Location / Heritage Seat"
+                  label={isBn ? 'দাপ্তরিক ঠিকানা ও স্মারক কেন্দ্র (English)' : 'Physical Location / Heritage Seat (English)'}
+                  placeholder="e.g. Radhaballabh, Rangpur-5400, Bangladesh"
                   value={formState.location}
                   onChange={(e) => setFormState({ ...formState, location: e.target.value })}
                 />
+                <Input
+                  label={isBn ? 'দাপ্তরিক ঠিকানা ও স্মারক কেন্দ্র (বাংলা)' : 'Physical Location / Heritage Seat (Bangla)'}
+                  placeholder="উদাঃ রাধাবল্লভ, রংপুর সদর, রংপুর-৫৪০০, বাংলাদেশ"
+                  value={formState.locationBn || ''}
+                  onChange={(e) => setFormState({ ...formState, locationBn: e.target.value })}
+                />
               </div>
 
-              <Input
-                label="Archival Consultation Hours"
-                value={formState.researchHours}
-                onChange={(e) => setFormState({ ...formState, researchHours: e.target.value })}
-              />
+              {/* Research Hours */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label={isBn ? 'পরামর্শ ও পরিদর্শনের সময়সূচি (English)' : 'Archival Consultation Hours (English)'}
+                  placeholder="e.g. Sunday through Thursday, 10:00 AM – 4:00 PM (By Appointment)"
+                  value={formState.researchHours}
+                  onChange={(e) => setFormState({ ...formState, researchHours: e.target.value })}
+                />
+                <Input
+                  label={isBn ? 'পরামর্শ ও পরিদর্শনের সময়সূচি (বাংলা)' : 'Archival Consultation Hours (Bangla)'}
+                  placeholder="উদাঃ রবিবার থেকে বৃহস্পতিবার, সকাল ১০:০০ – বিকাল ৪:০০ (পূর্বানুমতি সাপেক্ষে)"
+                  value={formState.researchHoursBn || ''}
+                  onChange={(e) => setFormState({ ...formState, researchHoursBn: e.target.value })}
+                />
+              </div>
 
-              <Textarea
-                label="Archival Citation & Attribution Guidelines"
-                value={formState.citationPolicy}
-                onChange={(e) => setFormState({ ...formState, citationPolicy: e.target.value })}
-                rows={3}
-                helperText="Prescribed format for academic papers and literary publications."
-              />
+              {/* Citation Policy */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Textarea
+                  label={isBn ? 'উদ্ধৃতি ও সাইটেশন নীতিমালা (English)' : 'Archival Citation & Attribution Guidelines (English)'}
+                  value={formState.citationPolicy}
+                  onChange={(e) => setFormState({ ...formState, citationPolicy: e.target.value })}
+                  rows={3}
+                  helperText="Prescribed citation format for academic and literary research."
+                />
+                <Textarea
+                  label={isBn ? 'উদ্ধৃতি ও সাইটেশন নীতিমালা (বাংলা)' : 'Archival Citation & Attribution Guidelines (Bangla)'}
+                  value={formState.citationPolicyBn || ''}
+                  onChange={(e) => setFormState({ ...formState, citationPolicyBn: e.target.value })}
+                  rows={3}
+                  helperText="গবেষণা প্রবন্ধে তথ্যসূত্র ব্যবহারের নিয়মাবলী।"
+                />
+              </div>
             </div>
           )}
 

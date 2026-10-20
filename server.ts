@@ -21,6 +21,7 @@ const isProduction = !isExplicitDev && (process.env.NODE_ENV === 'production' ||
 
 // Configuration from Environment
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'curator@drmofizulmantu.org').toLowerCase().trim();
+const CURATOR_EMAIL = (process.env.CURATOR_EMAIL || process.env.ADMIN_EMAIL || 'misbahsakin1@gmail.com').toLowerCase().trim();
 const AUTH_SECRET = process.env.AUTH_SECRET || 'mantu_archive_default_secure_secret_2026_dev_key';
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
 
@@ -190,7 +191,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // Contact Submission
 app.post('/api/contact', (req: Request, res: Response): void => {
-  const { name, email, affiliation, inquiryType, subject, message } = req.body;
+  const { name, email, affiliation, inquiryType, subject, message, recipientEmail } = req.body;
 
   if (!name || !email || !subject || !message) {
     res.status(400).json({
@@ -198,6 +199,8 @@ app.post('/api/contact', (req: Request, res: Response): void => {
     });
     return;
   }
+
+  const destinationEmail = recipientEmail || CURATOR_EMAIL;
 
   const inquiry: InMemContactInquiry = {
     id: `INQ-${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
@@ -211,6 +214,7 @@ app.post('/api/contact', (req: Request, res: Response): void => {
   };
 
   contactInquiries.unshift(inquiry);
+  console.log(`[Archive Secretariat] New inquiry "${inquiry.subject}" from ${inquiry.name} <${inquiry.email}>. Designated curator: ${destinationEmail}`);
 
   // In production with DATABASE_URL, this writes asynchronously to PostgreSQL
   res.status(200).json({
@@ -218,6 +222,7 @@ app.post('/api/contact', (req: Request, res: Response): void => {
     message: 'Scholarly inquiry successfully registered with archive secretariat.',
     receiptNo: inquiry.id,
     timestamp: inquiry.receivedAt,
+    recipient: destinationEmail,
   });
 });
 
