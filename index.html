@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // In accordance with environment constraints (HMR Disabled), suppress Vite client WebSocket errors
+      window.addEventListener('unhandledrejection', function (e) {
+        var msg = e && e.reason && (e.reason.message || String(e.reason));
+        var stack = e && e.reason && e.reason.stack;
+        if (
+          (msg && (msg.indexOf('WebSocket') !== -1 || msg.indexOf('vite-hmr') !== -1)) ||
+          (stack && stack.indexOf('@vite/client') !== -1)
+        ) {
+          e.preventDefault();
+        }
+      });
+      window.addEventListener('error', function (e) {
+        var msg = e && (e.message || String(e));
+        var file = e && e.filename;
+        if (
+          (msg && msg.indexOf('WebSocket') !== -1) ||
+          (file && file.indexOf('@vite/client') !== -1)
+        ) {
+          e.preventDefault();
+        }
+      });
+    </script>
+    <title>Dr. Md. Mofizul Islam Mantu | Archive & Legacy</title>
+    <meta name="description" content="The official personal legacy archive of Dr. Md. Mofizul Islam Mantu (ডা. মোঃ মফিজুল ইসলাম মান্টু) — physician, poet, researcher, musician, and cultural activist from Rangpur, Bangladesh." />
+    <meta property="og:title" content="Dr. Md. Mofizul Islam Mantu | Archive & Legacy" />
+    <meta property="og:description" content="A Life in Healing, Literature, Music and Service — চিকিৎসা, সাহিত্য, সংগীত ও জনসেবায় এক জীবন।" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#F7F4ED] text-[#211F1C] antialiased selection:bg-[#A84E36] selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

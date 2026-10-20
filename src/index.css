@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-paper: #F7F4ED;
+    --bg-paper-muted: #EAE4D8;
+    --text-ink: #211F1C;
+    --text-ink-muted: #625D52;
+    --text-ink-subtle: #8A8375;
+    --accent-terracotta: #A84E36;
+    --accent-gold: #B38F44;
+    --border-hairline: rgba(33, 31, 28, 0.12);
+  }
+
+  body {
+    background-color: var(--bg-paper);
+    color: var(--text-ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Default headings */
+  h1, h2, h3, h4, .font-serif-headline, .font-serif {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.015em;
+  }
+
+  .font-sans {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  .font-bengali-text, .font-bengali-heading {
+    font-family: 'Noto Serif Bengali', serif;
+  }
+
+  .font-bengali-sans {
+    font-family: 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Typography adaptations when Bengali is active */
+  html[lang="bn"] body {
+    font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  html[lang="bn"] h1,
+  html[lang="bn"] h2,
+  html[lang="bn"] h3,
+  html[lang="bn"] h4,
+  html[lang="bn"] .font-serif {
+    font-family: 'Noto Serif Bengali', 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  html[lang="bn"] .font-sans {
+    font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+/* Custom drop-cap for editorial longform */
+.editorial-drop-cap::first-letter {
+  font-family: 'Cormorant Garamond', 'Noto Serif Bengali', Georgia, serif;
+  float: left;
+  font-size: 3.75rem;
+  line-height: 0.85;
+  padding-top: 0.2rem;
+  padding-right: 0.75rem;
+  padding-bottom: 0.1rem;
+  color: #A84E36;
+  font-weight: 600;
+}
+
+/* Tabular figures for archival dates and lists */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

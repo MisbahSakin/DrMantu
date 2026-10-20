@@ -1,0 +1,8 @@
+{
+  "name": "Dr. Md. Mofizul Islam Mantu ",
+  "description": "The official personal legacy archive of Dr. Md. Mofizul Islam Mantu (ডা. মোঃ মফিজুল ইসলাম মণ্টু) — physician, poet, researcher, musician, and cultural activist from Rangpur, Bangladesh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
