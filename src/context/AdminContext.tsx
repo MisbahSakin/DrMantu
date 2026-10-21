@@ -613,6 +613,37 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
             return [heroItem, ...prev];
           });
+        } else {
+          // If server registry is missing portrait but this browser has a published hero portrait in local storage, sync it up
+          const localHero = mediaItems.find(
+            (m) => m.assignment.section === 'hero' && m.status === 'published' && Boolean(m.url)
+          );
+          if (localHero && localHero.url) {
+            const token = localStorage.getItem('mantu_admin_token');
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            fetch('/api/admin/hero-portrait', {
+              method: 'POST',
+              credentials: 'include',
+              headers,
+              body: JSON.stringify({
+                portrait: {
+                  url: localHero.url,
+                  title: localHero.title,
+                  titleBn: localHero.titleBn,
+                  caption: localHero.caption,
+                  captionBn: localHero.captionBn,
+                  altText: localHero.altText,
+                  altTextBn: localHero.altTextBn,
+                },
+              }),
+            })
+              .then((r) => r.json())
+              .then((d) => {
+                if (d.portrait) setServerHeroPortrait(d.portrait);
+              })
+              .catch(() => {});
+          }
         }
         if (typeof data.vercelBlobConfigured === 'boolean') {
           setStorageStatus({
