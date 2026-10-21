@@ -19,9 +19,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
   const { isBn, t, formatNumber } = useLanguage();
 
   const mainTitle = isBn ? (writing.titleBn || writing.title) : writing.title;
-  const subTitle = isBn
-    ? (writing.titleBn && writing.title !== writing.titleBn ? writing.title : undefined)
-    : writing.titleBn;
+  const subTitle = undefined;
 
   if (layout === 'row') {
     return (

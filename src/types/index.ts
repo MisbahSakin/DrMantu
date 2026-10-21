@@ -239,6 +239,7 @@ export interface AdminMediaItem {
 export interface AdminSettings {
   siteNameEn: string;
   siteNameBn: string;
+  heroPortraitUrl?: string;
   taglineEn: string;
   taglineBn: string;
   descriptionEn: string;

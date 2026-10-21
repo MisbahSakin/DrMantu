@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminLayout } from './AdminLayout';
 import { useAdmin } from '../../context/AdminContext';
@@ -51,6 +51,17 @@ export const AdminContentPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AdminContentItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<AdminContentItem | null>(null);
+
+  // Lock body scroll when modal is active
+  useEffect(() => {
+    if (isCreateModalOpen || editingItem || itemToDelete) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [isCreateModalOpen, editingItem, itemToDelete]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -394,15 +405,22 @@ export const AdminContentPage: React.FC = () => {
                     {/* Category */}
                     <td className="py-3.5 px-4 text-[#625D52]">{item.category}</td>
 
-                    {/* Status */}
+                    {/* Status with 1-click toggle */}
                     <td className="py-3.5 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateContent(item.id, {
+                            status: item.status === 'published' ? 'draft' : 'published',
+                          })
+                        }
+                        title="Click to toggle Published / Draft status"
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-2xs border text-[11px] font-medium transition-colors cursor-pointer ${
                           item.status === 'published'
-                            ? 'text-[#2A4736]'
+                            ? 'bg-[#2A4736]/10 text-[#2A4736] border-[#2A4736]/30 hover:bg-[#2A4736]/20'
                             : item.status === 'draft'
-                            ? 'text-[#B38F44]'
-                            : 'text-[#8A8375]'
+                            ? 'bg-[#B38F44]/10 text-[#B38F44] border-[#B38F44]/30 hover:bg-[#B38F44]/20'
+                            : 'bg-[#8A8375]/10 text-[#8A8375] border-[#8A8375]/30'
                         }`}
                       >
                         <span
@@ -415,7 +433,7 @@ export const AdminContentPage: React.FC = () => {
                           }`}
                         />
                         <span className="capitalize">{item.status}</span>
-                      </span>
+                      </button>
                     </td>
 
                     {/* Updated At */}
@@ -531,9 +549,10 @@ export const AdminContentPage: React.FC = () => {
           CREATE / EDIT CONTENT MODAL
          =================================================================== */}
       {(isCreateModalOpen || editingItem) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs overflow-y-auto">
-          <div className="bg-[#F7F4ED] border border-[#211F1C]/20 rounded-xs max-w-2xl w-full p-6 sm:p-8 shadow-2xl my-8 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#211F1C]/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs">
+          <div className="bg-[#F7F4ED] border border-[#211F1C]/20 rounded-xs max-w-2xl w-full shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="shrink-0 p-4 sm:p-5 border-b border-[#211F1C]/10 flex items-center justify-between bg-[#F7F4ED]">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#A84E36]" />
                 <h3 className="font-serif text-lg font-semibold text-[#211F1C]">
@@ -541,126 +560,132 @@ export const AdminContentPage: React.FC = () => {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setIsCreateModalOpen(false);
                   setEditingItem(null);
                 }}
-                className="text-[#625D52] hover:text-[#211F1C] p-1"
+                className="text-[#625D52] hover:text-[#211F1C] p-1.5 hover:bg-[#EAE4D8] rounded-xs transition-colors"
+                aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="space-y-4 text-xs font-sans">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Title (English)"
-                  value={formData.title}
-                  error={formErrors.title}
-                  onChange={(e) => {
-                    const title = e.target.value;
-                    const slug = title
-                      .toLowerCase()
-                      .replace(/[^a-z0-9]+/g, '-')
-                      .replace(/(^-|-$)+/g, '');
-                    setFormData({
-                      ...formData,
-                      title,
-                      slug: editingItem ? formData.slug : slug,
-                    });
-                  }}
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleFormSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden text-xs font-sans">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Title (English)"
+                    value={formData.title}
+                    error={formErrors.title}
+                    onChange={(e) => {
+                      const title = e.target.value;
+                      const slug = title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/(^-|-$)+/g, '');
+                      setFormData({
+                        ...formData,
+                        title,
+                        slug: editingItem ? formData.slug : slug,
+                      });
+                    }}
+                    required
+                  />
+                  <Input
+                    label="Title (Bengali / বাংলা)"
+                    value={formData.titleBn}
+                    onChange={(e) => setFormData({ ...formData, titleBn: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Input
+                    label="URL Slug"
+                    value={formData.slug}
+                    error={formErrors.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    required
+                  />
+
+                  <Select
+                    label="Content Type"
+                    value={formData.type}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value as AdminContentItem['type'] })
+                    }
+                    options={[
+                      { value: 'Article', label: 'Article' },
+                      { value: 'Essay', label: 'Essay' },
+                      { value: 'Monograph', label: 'Monograph' },
+                      { value: 'Page', label: 'Core Page' },
+                    ]}
+                  />
+
+                  <Select
+                    label="Publication Status"
+                    value={formData.status}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        status: e.target.value as PublicationStatus,
+                      })
+                    }
+                    options={[
+                      { value: 'published', label: 'Published' },
+                      { value: 'draft', label: 'Draft' },
+                      { value: 'archived', label: 'Archived' },
+                    ]}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Category / Folio"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  />
+                  <Input
+                    label="Author / Byline"
+                    value={formData.author}
+                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  />
+                </div>
+
+                <Textarea
+                  label="Summary / Excerpt"
+                  value={formData.excerpt}
+                  error={formErrors.excerpt}
+                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                  rows={3}
+                  helperText="Short abstract displayed on catalog cards and search indexes."
                   required
                 />
+
+                <Textarea
+                  label="Body Text / Full Archival Transcript"
+                  value={formData.body}
+                  onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                  rows={4}
+                  helperText="Optional transcript or notes for this article."
+                />
+
                 <Input
-                  label="Title (Bengali / বাংলা)"
-                  value={formData.titleBn}
-                  onChange={(e) => setFormData({ ...formData, titleBn: e.target.value })}
+                  label="Tags (comma-separated)"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="e.g. Liberation War, Rangpur, Literature"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Input
-                  label="URL Slug"
-                  value={formData.slug}
-                  error={formErrors.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  required
-                />
-
-                <Select
-                  label="Content Type"
-                  value={formData.type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, type: e.target.value as AdminContentItem['type'] })
-                  }
-                  options={[
-                    { value: 'Article', label: 'Article' },
-                    { value: 'Essay', label: 'Essay' },
-                    { value: 'Monograph', label: 'Monograph' },
-                    { value: 'Page', label: 'Core Page' },
-                  ]}
-                />
-
-                <Select
-                  label="Publication Status"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as PublicationStatus,
-                    })
-                  }
-                  options={[
-                    { value: 'published', label: 'Published' },
-                    { value: 'draft', label: 'Draft' },
-                    { value: 'archived', label: 'Archived' },
-                  ]}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Category / Folio"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                />
-                <Input
-                  label="Author / Byline"
-                  value={formData.author}
-                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                />
-              </div>
-
-              <Textarea
-                label="Summary / Excerpt"
-                value={formData.excerpt}
-                error={formErrors.excerpt}
-                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                rows={3}
-                helperText="Short abstract displayed on catalog cards and search indexes."
-                required
-              />
-
-              <Textarea
-                label="Body Text / Full Archival Transcript"
-                value={formData.body}
-                onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                rows={4}
-                helperText="Optional transcript or notes for this article."
-              />
-
-              <Input
-                label="Tags (comma-separated)"
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="e.g. Liberation War, Rangpur, Literature"
-              />
-
-              <div className="pt-4 border-t border-[#211F1C]/10 flex items-center justify-between">
-                <span className="text-[11px] text-[#8A8375]">
+              {/* Sticky Modal Footer */}
+              <div className="shrink-0 p-4 border-t border-[#211F1C]/10 bg-[#EAE4D8]/50 flex items-center justify-between">
+                <span className="text-[11px] text-[#8A8375] hidden sm:inline">
                   Changes apply immediately to your active browser session.
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                   <Button
                     type="button"
                     variant="outline"

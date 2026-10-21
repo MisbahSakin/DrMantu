@@ -87,8 +87,7 @@ export const ContactPage: React.FC = () => {
     <Layout>
       <PageHeader
         kicker={t('contact.kicker')}
-        title={t('contact.title')}
-        titleBn="গবেষণা ও মহাফেজখানা অনুসন্ধান"
+        title={isBn ? 'গবেষণা ও আর্কাইভ অনুসন্ধান' : 'Research Inquiries & Consultations'}
         description={t('contact.desc')}
         breadcrumbs={[{ label: t('nav.contact') }]}
       />

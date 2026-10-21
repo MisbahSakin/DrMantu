@@ -155,7 +155,7 @@ export const BooksPage: React.FC = () => {
       <div className="mt-16 p-4 bg-[#EAE4D8]/30 border border-[#211F1C]/10 rounded-xs text-xs text-[#8A8375] font-sans flex items-center justify-between flex-wrap gap-2">
         <span>
           {isBn
-            ? '* মুদ্রিত সংস্করণ ও প্রকাশিত মনোগ্রাফ থেকে গ্রন্থ বিবরণী লিপিবদ্ধ। সকল জ্যাকেট ডিজাইন মহাফেজখানা রেফারেন্স হিসেবে উপস্থাপিত।'
+            ? '* মুদ্রিত সংস্করণ ও প্রকাশিত মনোগ্রাফ থেকে গ্রন্থ বিবরণী লিপিবদ্ধ। সকল প্রচ্ছদ ডিজাইন আর্কাইভ রেফারেন্স হিসেবে উপস্থাপিত।'
             : '* Bibliographic data cataloged from printed editions and published monographs. Jacket designs represent archival references.'}
         </span>
       </div>

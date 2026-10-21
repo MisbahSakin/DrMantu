@@ -68,7 +68,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
               {isBn ? ARCHIVE_META.nameBn : ARCHIVE_META.nameEn}
             </div>
             <div className="text-xs text-[#625D52] truncate">
-              {isBn ? ARCHIVE_META.nameEn : ARCHIVE_META.nameBn}
+              {isBn ? 'ঐতিহাসিক ও সাহিত্য স্মারক আর্কাইভ' : 'Archive & Legacy · Rangpur'}
             </div>
           </div>
           <button
@@ -83,7 +83,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
         {/* Language switcher inside drawer */}
         <div className="p-4 bg-[#EAE4D8]/50 border-b border-[#211F1C]/10">
           <div className="text-[11px] uppercase tracking-wider font-semibold text-[#8A8375] mb-2 font-sans">
-            {isBn ? 'ভাষা পরিবর্তন / Switch Language' : 'Language Selection / ভাষা'}
+            {isBn ? 'ভাষা নির্বাচন' : 'Language Selection'}
           </div>
           <LanguageSwitcher variant="drawer" />
         </div>

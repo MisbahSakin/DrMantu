@@ -215,7 +215,7 @@ export const AdminOverviewPage: React.FC = () => {
               <tbody className="divide-y divide-[#211F1C]/10 text-[#211F1C]">
                 {books.slice(0, 6).map((book) => {
                   const bookTitle = isBn ? (book.titleBn || book.title) : book.title;
-                  const bookSub = isBn ? (book.titleBn && book.title !== book.titleBn ? book.title : undefined) : book.titleBn;
+                  const bookSub = undefined;
                   const bookCat = book.category;
                   return (
                     <tr key={book.id} className="hover:bg-[#EAE4D8]/20 transition-colors">

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { AdminLayout } from './AdminLayout';
 import { useAdmin } from '../../context/AdminContext';
 import { AdminMediaItem, MediaSection, PublicationStatus } from '../../types';
@@ -47,6 +47,10 @@ export const AdminMediaPage: React.FC = () => {
     assignMedia,
     removeMediaAssignment,
     deleteMedia,
+    addMedia,
+    serverHeroPortrait,
+    storageStatus,
+    syncServerHeroPortrait,
     showToast,
   } = useAdmin();
 
@@ -66,7 +70,20 @@ export const AdminMediaPage: React.FC = () => {
   const [mediaToDelete, setMediaToDelete] = useState<AdminMediaItem | null>(null);
   const [mediaToAssign, setMediaToAssign] = useState<AdminMediaItem | null>(null);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (isUploadModalOpen || selectedMedia || mediaToReplace || mediaToDelete || mediaToAssign) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [isUploadModalOpen, selectedMedia, mediaToReplace, mediaToDelete, mediaToAssign]);
+
   // Upload Form State
+  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
+  const [directImageUrl, setDirectImageUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
@@ -208,13 +225,62 @@ export const AdminMediaPage: React.FC = () => {
   // --- Upload Submission ---
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
-      setUploadError('Please select a valid photographic or manuscript file to upload.');
-      return;
-    }
 
     if (!uploadForm.title.trim()) {
       setUploadError('English title is required for catalog indexing.');
+      return;
+    }
+
+    const targetId =
+      uploadForm.section === 'books'
+        ? uploadForm.targetId || (books[0]?.slug ?? '')
+        : uploadForm.section === 'hero'
+        ? 'hero-portrait'
+        : uploadForm.targetId;
+
+    if (uploadMode === 'url') {
+      const cleanUrl = directImageUrl.trim();
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        setUploadError('Please provide a valid image URL starting with http:// or https://');
+        return;
+      }
+
+      setIsUploading(true);
+      setUploadError(null);
+      try {
+        addMedia({
+          title: uploadForm.title.trim(),
+          titleBn: uploadForm.titleBn?.trim() || undefined,
+          accessionNo: uploadForm.accessionNo.trim(),
+          category: uploadForm.category,
+          year: uploadForm.year.trim() || String(new Date().getFullYear()),
+          medium: uploadForm.medium.trim() || 'Archival Photographic Print',
+          caption: uploadForm.caption.trim() || uploadForm.title.trim(),
+          captionBn: uploadForm.captionBn?.trim() || undefined,
+          altText: uploadForm.altText.trim() || uploadForm.title.trim(),
+          altTextBn: uploadForm.altTextBn?.trim() || undefined,
+          url: cleanUrl,
+          fileSize: 'Hosted URL',
+          dimensions: 'Original Aspect',
+          aspectRatio: '4:5',
+          status: uploadForm.status,
+          assignment: {
+            section: uploadForm.section,
+            targetId,
+          },
+        });
+        setIsUploadModalOpen(false);
+        resetUploadForm();
+      } catch (err: any) {
+        setUploadError(err.message || 'Failed to register image URL.');
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
+    if (!selectedFile) {
+      setUploadError('Please select a valid photographic or manuscript file to upload.');
       return;
     }
 
@@ -222,13 +288,6 @@ export const AdminMediaPage: React.FC = () => {
     setUploadError(null);
 
     try {
-      const targetId =
-        uploadForm.section === 'books'
-          ? uploadForm.targetId || (books[0]?.slug ?? '')
-          : uploadForm.section === 'hero'
-          ? 'hero-portrait'
-          : uploadForm.targetId;
-
       const result = await uploadMediaFile(selectedFile, {
         title: uploadForm.title,
         titleBn: uploadForm.titleBn,
@@ -260,6 +319,8 @@ export const AdminMediaPage: React.FC = () => {
     setSelectedFile(null);
     setPreviewDataUrl(null);
     setFileDimensions(null);
+    setDirectImageUrl('');
+    setUploadMode('file');
     setUploadError(null);
     setUploadForm({
       title: '',
@@ -475,6 +536,59 @@ export const AdminMediaPage: React.FC = () => {
               ? 'পাবলিক ওয়েবসাইট থেকে সকল সাধারণ আপলোড নিয়ন্ত্রণ সম্পূর্ণরূপে অপসারিত। শুধুমাত্র এই প্যানেল থেকে অনুমোদিত প্রশাসকগণ ছবি আপলোড, প্রতিস্থাপন, সেকশনে বরাদ্দ বা প্রকাশ করতে পারবেন। অপ্রকাশিত (Draft) ছবি পাবলিক ভিজিটরদের কাছে সম্পূর্ণ লুক্কায়িত থাকে।'
               : 'All public upload inputs and controls have been permanently removed from the visitor website. Only authenticated administrators in this studio can upload, inspect, replace, assign, or publish images. Unpublished (Draft) assets remain strictly private.'}
           </p>
+        </div>
+      </div>
+
+      {/* ===================================================================
+          GLOBAL CROSS-DEVICE SYNC & VERCEL BLOB STORAGE STATUS
+         =================================================================== */}
+      <div
+        className={`p-4 border rounded-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans shadow-2xs ${
+          storageStatus?.vercelBlobConfigured
+            ? 'bg-[#2A4736]/10 border-[#2A4736]/30 text-[#2A4736]'
+            : 'bg-[#B38F44]/10 border-[#B38F44]/30 text-[#625D52]'
+        }`}
+      >
+        <div className="flex items-start gap-2.5">
+          <Globe className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <div className="font-semibold flex items-center gap-2">
+              <span>
+                {isBn
+                  ? 'গ্লোবাল সিঙ্ক ও স্টোরেজ ইঞ্জিন স্থিতি:'
+                  : 'Global Sync & Storage Engine Status:'}
+              </span>
+              <span
+                className={`px-1.5 py-0.5 rounded-3xs text-[10px] uppercase font-mono font-bold ${
+                  storageStatus?.vercelBlobConfigured
+                    ? 'bg-[#2A4736] text-white'
+                    : 'bg-[#B38F44] text-white'
+                }`}
+              >
+                {storageStatus?.vercelBlobConfigured
+                  ? 'Vercel Blob CDN Active'
+                  : 'Serverless Memory / Cache Mode'}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#625D52] leading-relaxed">
+              {storageStatus?.vercelBlobConfigured
+                ? isBn
+                  ? 'ভার্সেল ব্লব স্টোরেজ সফলভাবে সংযুক্ত। আপলোডকৃত সকল পোর্ট্রেট ও ছবি মোবাইল ও সকল ব্রাউজারে বিশ্বব্যাপী সরাসরি লাইভ থাকবে।'
+                  : 'Vercel Blob Storage is connected. Uploaded portraits and archive media are hosted on a global CDN and immediately visible across all mobile devices and browsers.'
+                : isBn
+                ? 'ছবিগুলো ব্যাকএন্ড মেমোরি ও /tmp ক্যাশে সংরক্ষিত হচ্ছে। ভার্সেলে ছবিগুলো স্থায়ীভাবে রাখতে Vercel Project -> Storage ট্যাবে Vercel Blob যুক্ত করুন, অথবা সরাসরি Image URL ব্যবহার করুন।'
+                : 'Images are synchronized through server memory and temporary filesystem cache. For permanent persistent image hosting across Vercel deployments, connect Vercel Blob in your Vercel Project Settings (Storage tab), or enter an Image URL directly.'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => syncServerHeroPortrait()}
+            className="px-3 py-1.5 bg-white border border-[#211F1C]/20 hover:border-[#A84E36] rounded-xs text-[11px] font-medium text-[#211F1C] hover:text-[#A84E36] transition-colors"
+          >
+            {isBn ? 'সিঙ্ক রিফ্রেশ' : 'Refresh Sync'}
+          </button>
         </div>
       </div>
 
@@ -904,9 +1018,10 @@ export const AdminMediaPage: React.FC = () => {
           MODAL 1: UPLOAD ARCHIVAL IMAGE (Strict Validation & Section Targeting)
          =================================================================== */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-2xs overflow-y-auto">
-          <div className="bg-[#F7F4ED] border border-[#211F1C]/25 rounded-xs max-w-2xl w-full p-6 sm:p-8 shadow-2xl my-8 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#211F1C]/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-hidden">
+          <div className="bg-[#F7F4ED] border border-[#211F1C]/25 rounded-xs max-w-2xl w-full shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
+            {/* Modal Sticky Header */}
+            <div className="shrink-0 p-4 sm:p-5 border-b border-[#211F1C]/10 flex items-center justify-between bg-[#F7F4ED]">
               <div className="flex items-center gap-2">
                 <UploadCloud className="w-5 h-5 text-[#A84E36]" />
                 <h3 className="font-serif text-lg font-semibold text-[#211F1C]">
@@ -915,78 +1030,145 @@ export const AdminMediaPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsUploadModalOpen(false)}
-                className="text-[#625D52] hover:text-[#211F1C] p-1"
+                className="text-[#625D52] hover:text-[#211F1C] p-1.5 hover:bg-[#EAE4D8] rounded-xs transition-colors"
+                aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {uploadError && (
-              <div className="p-3 bg-[#933420]/10 border border-[#933420]/30 rounded-xs flex items-start gap-2.5 text-xs text-[#933420]">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{uploadError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleUploadSubmit} className="space-y-4 text-xs font-sans">
-              {/* Real File Input Dropzone */}
-              <div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                />
-
-                <div
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xs p-6 text-center cursor-pointer transition-all ${
-                    previewDataUrl
-                      ? 'border-[#2A4736] bg-[#2A4736]/5'
-                      : 'border-[#211F1C]/25 hover:border-[#A84E36] bg-[#EAE4D8]/30'
-                  }`}
-                >
-                  {previewDataUrl ? (
-                    <div className="flex flex-col sm:flex-row items-center gap-4 text-left">
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xs border border-[#211F1C]/15 overflow-hidden shrink-0 bg-white shadow-xs">
-                        <img
-                          src={previewDataUrl}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="font-semibold text-sm text-[#211F1C] flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-[#2A4736]" />
-                          <span>Image Validated & Ready</span>
-                        </div>
-                        <div className="text-[#625D52] text-xs font-mono">
-                          {selectedFile?.name}
-                        </div>
-                        <div className="text-[11px] text-[#8A8375]">
-                          Size: {selectedFile ? (selectedFile.size / (1024 * 1024)).toFixed(2) + ' MB' : ''} · Dimensions: {fileDimensions ? `${fileDimensions.width} × ${fileDimensions.height} px` : 'Detecting...'}
-                        </div>
-                        <div className="pt-1 text-[11px] text-[#A84E36] underline">
-                          Click to select a different image file
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <UploadCloud className="w-9 h-9 text-[#A84E36] mx-auto stroke-[1.4]" />
-                      <div className="font-semibold text-xs text-[#211F1C]">
-                        {isBn ? 'ফাইল নির্বাচন করতে ক্লিক করুন অথবা এখানে টেনে আনুন' : 'Click to select image file or drag and drop here'}
-                      </div>
-                      <p className="text-[11px] text-[#8A8375]">
-                        Supported archival formats: <strong>JPG, PNG, WebP</strong> (Maximum: <strong>5.0 MB</strong>)
-                      </p>
-                    </div>
-                  )}
+            <form onSubmit={handleUploadSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden text-xs font-sans">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                {uploadError && (
+                  <div className="p-3 bg-[#933420]/10 border border-[#933420]/30 rounded-xs flex items-start gap-2.5 text-xs text-[#933420]">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+                {/* Method selector: File Upload vs Direct Hosted URL */}
+                <div className="flex items-center gap-2 border-b border-[#211F1C]/10 pb-3">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('file')}
+                    className={`px-3 py-1.5 rounded-xs text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                      uploadMode === 'file'
+                        ? 'bg-[#211F1C] text-[#F7F4ED]'
+                        : 'bg-white border border-[#211F1C]/15 text-[#625D52] hover:text-[#211F1C]'
+                    }`}
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>{isBn ? 'ডিভাইস থেকে ফাইল আপলোড' : 'Upload Image File'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('url')}
+                    className={`px-3 py-1.5 rounded-xs text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                      uploadMode === 'url'
+                        ? 'bg-[#211F1C] text-[#F7F4ED]'
+                        : 'bg-white border border-[#211F1C]/15 text-[#625D52] hover:text-[#211F1C]'
+                    }`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>{isBn ? 'সরাসরি ইমেজ লিঙ্ক (URL)' : 'Direct Image URL'}</span>
+                  </button>
                 </div>
-              </div>
+
+                {uploadMode === 'url' ? (
+                  <div className="p-4 bg-white border border-[#211F1C]/15 rounded-xs space-y-3">
+                    <Input
+                      label={
+                        isBn
+                          ? 'অনলাইন ছবির সরাসরি ইউআরএল (https://...)'
+                          : 'Direct Image URL (e.g. from Vercel Blob, Imgur, Cloudinary, etc.)'
+                      }
+                      value={directImageUrl}
+                      onChange={(e) => setDirectImageUrl(e.target.value)}
+                      placeholder="https://example.com/images/dr-mantu-portrait.jpg"
+                      required={uploadMode === 'url'}
+                    />
+                    {directImageUrl && (
+                      <div className="flex items-center gap-3 p-2 bg-[#EAE4D8]/30 border border-[#211F1C]/10 rounded-xs">
+                        <div className="w-16 h-20 rounded-2xs overflow-hidden border border-[#211F1C]/15 bg-white shrink-0">
+                          <img
+                            src={directImageUrl}
+                            alt="URL Preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                        <div className="text-[11px] text-[#625D52] space-y-0.5 min-w-0">
+                          <p className="font-semibold text-[#211F1C]">
+                            {isBn ? 'লাইভ প্রিভিউ' : 'Live Image Preview'}
+                          </p>
+                          <p className="truncate font-mono text-[10px] text-[#8A8375]">
+                            {directImageUrl}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Real File Input Dropzone */
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                    />
+
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-xs p-6 text-center cursor-pointer transition-all ${
+                        previewDataUrl
+                          ? 'border-[#2A4736] bg-[#2A4736]/5'
+                          : 'border-[#211F1C]/25 hover:border-[#A84E36] bg-[#EAE4D8]/30'
+                      }`}
+                    >
+                      {previewDataUrl ? (
+                        <div className="flex flex-col sm:flex-row items-center gap-4 text-left">
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xs border border-[#211F1C]/15 overflow-hidden shrink-0 bg-white shadow-xs">
+                            <img
+                              src={previewDataUrl}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="font-semibold text-sm text-[#211F1C] flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-[#2A4736]" />
+                              <span>Image Validated & Ready</span>
+                            </div>
+                            <div className="text-[#625D52] text-xs font-mono">
+                              {selectedFile?.name}
+                            </div>
+                            <div className="text-[11px] text-[#8A8375]">
+                              Size: {selectedFile ? (selectedFile.size / (1024 * 1024)).toFixed(2) + ' MB' : ''} · Dimensions: {fileDimensions ? `${fileDimensions.width} × ${fileDimensions.height} px` : 'Detecting...'}
+                            </div>
+                            <div className="pt-1 text-[11px] text-[#A84E36] underline">
+                              Click to select a different image file
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <UploadCloud className="w-9 h-9 text-[#A84E36] mx-auto stroke-[1.4]" />
+                          <div className="font-semibold text-xs text-[#211F1C]">
+                            {isBn ? 'ফাইল নির্বাচন করতে ক্লিক করুন অথবা এখানে টেনে আনুন' : 'Click to select image file or drag and drop here'}
+                          </div>
+                          <p className="text-[11px] text-[#8A8375]">
+                            Supported archival formats: <strong>JPG, PNG, WebP</strong> (Maximum: <strong>10.0 MB</strong>)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
               {/* Title & Bengali Title */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1157,11 +1339,14 @@ export const AdminMediaPage: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#211F1C]/10 flex items-center justify-between">
-                <span className="text-[11px] text-[#8A8375]">
+              </div>
+
+              {/* Modal Sticky Footer */}
+              <div className="shrink-0 p-4 border-t border-[#211F1C]/10 bg-[#EAE4D8]/50 flex items-center justify-between">
+                <span className="text-[11px] text-[#8A8375] hidden sm:inline">
                   Validated locally and stored in active session registry.
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                   <Button
                     type="button"
                     variant="outline"
@@ -1367,9 +1552,10 @@ export const AdminMediaPage: React.FC = () => {
           MODAL 4: INSPECT & FULL EDIT METADATA MODAL
          =================================================================== */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-2xs overflow-y-auto">
-          <div className="bg-[#F7F4ED] border border-[#211F1C]/25 rounded-xs max-w-2xl w-full p-6 sm:p-8 shadow-2xl my-8 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#211F1C]/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-hidden">
+          <div className="bg-[#F7F4ED] border border-[#211F1C]/25 rounded-xs max-w-2xl w-full shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
+            {/* Modal Sticky Header */}
+            <div className="shrink-0 p-4 sm:p-5 border-b border-[#211F1C]/10 flex items-center justify-between bg-[#F7F4ED]">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-[#A84E36]">
                   {selectedMedia.accessionNo}
@@ -1381,11 +1567,15 @@ export const AdminMediaPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedMedia(null)}
-                className="text-[#625D52] hover:text-[#211F1C] p-1"
+                className="text-[#625D52] hover:text-[#211F1C] p-1.5 hover:bg-[#EAE4D8] rounded-xs transition-colors"
+                aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Scrollable Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 min-h-0">
 
             {/* Visual Canvas */}
             <div className="aspect-[16/9] bg-[#EAE4D8] border border-[#211F1C]/15 rounded-xs overflow-hidden flex items-center justify-center relative">
@@ -1607,6 +1797,7 @@ export const AdminMediaPage: React.FC = () => {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Book } from '../../types';
+import { ARCHIVE_META } from '../../data/archiveData';
 import { CategoryLabel } from '../ui/CategoryLabel';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAdmin } from '../../context/AdminContext';
@@ -46,17 +47,19 @@ export const BookCoverCard: React.FC<BookCoverCardProps> = ({ book, className = 
             {isBn ? (book.categoryBn || book.category) : book.category} · {formatNumber(book.year)}
           </div>
 
-          {/* Center: Bengali and English Title */}
+          {/* Center: Title in active language */}
           <div className="my-auto py-2">
-            <h3 className="font-bengali-heading text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-xs">
-              {book.titleBn}
+            <h3 className={`text-xl sm:text-2xl font-bold text-white leading-tight drop-shadow-xs ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
+              {isBn ? book.titleBn : book.title}
             </h3>
-            <p className="font-serif italic text-xs sm:text-sm text-white/90 mt-2 font-normal line-clamp-2">
-              {book.title}
-            </p>
+            {(isBn ? book.subtitleBn : book.subtitle) && (
+              <p className={`text-xs sm:text-sm text-white/90 mt-2 line-clamp-2 ${isBn ? 'font-bengali-text' : 'font-serif italic font-normal'}`}>
+                {isBn ? book.subtitleBn : book.subtitle}
+              </p>
+            )}
             <div className="w-8 h-[1px] bg-white/40 mx-auto my-2.5" />
             <p className="text-[10px] tracking-wider uppercase text-white/80 font-sans">
-              ডা. মোঃ মফিজুল ইসলাম মান্টু
+              {isBn ? ARCHIVE_META.nameBn : ARCHIVE_META.nameEn}
             </p>
           </div>
 
@@ -82,9 +85,11 @@ export const BookCoverCard: React.FC<BookCoverCardProps> = ({ book, className = 
             {isBn ? book.titleBn : book.title}
           </Link>
         </h4>
-        <p className={`text-sm text-[#625D52] mt-0.5 ${isBn ? 'font-serif italic' : 'font-bengali-text'}`}>
-          {isBn ? book.title : book.titleBn}
-        </p>
+        {(isBn ? book.subtitleBn : book.subtitle) && (
+          <p className={`text-sm text-[#625D52] mt-0.5 ${isBn ? 'font-bengali-text' : 'font-serif italic'}`}>
+            {isBn ? book.subtitleBn : book.subtitle}
+          </p>
+        )}
         <div className="mt-2 text-xs text-[#8A8375] font-sans">
           <span>{book.pages ? `${formatNumber(book.pages)} ${isBn ? 'পৃষ্ঠা' : 'pages'}` : (isBn ? 'সংরক্ষিত গ্রন্থ' : 'Monograph')}</span> · <span className="tabular-nums">{book.edition}</span>
         </div>

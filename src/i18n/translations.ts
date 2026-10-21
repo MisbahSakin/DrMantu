@@ -33,7 +33,7 @@ export const translations = {
     bn: 'ডা. মোঃ মফিজুল ইসলাম মান্টুর জীবন, চিকিৎসা ও সাহিত্য সাধনার ডিজিটাল সংগ্রহশালা।',
     en: 'Official digital archive of the life, medical service, and literary works of Dr. Md. Mofizul Islam Mantu.',
   },
-  'hero.plate': { bn: 'দলিল ফলক ০১ · প্রতিকৃতি মহাফেজখানা', en: 'Plate No. 01 · Portrait Folio' },
+  'hero.plate': { bn: 'দলিল ফলক ০১ · প্রতিকৃতি সংগ্রহ', en: 'Plate No. 01 · Portrait Folio' },
   'hero.roles': { bn: 'চিকিৎসক · কবি · গবেষক · সঙ্গীতশিল্পী', en: 'Physician · Poet · Researcher · Musician' },
   'hero.heritageSeat': { bn: 'স্মারক কেন্দ্র: রংপুর, বাংলাদেশ · জন্ম ১৯৫৩', en: 'Heritage Seat: Rangpur, Bangladesh · Est. 1953' },
   'hero.caption': { bn: 'ডা. মোঃ মফিজুল ইসলাম মান্টু · ঐতিহাসিক প্রতিকৃতি সংরক্ষণ।', en: 'Dr. Md. Mofizul Islam Mantu · Archival photographic portrait.' },
@@ -50,7 +50,7 @@ export const translations = {
     en: 'Portrait of Dr. Md. Mofizul Islam Mantu',
   },
   'hero.placeholderNotice': {
-    bn: 'ঐতিহাসিক মহাফেজখানা সংরক্ষিত ফলক · রংপুর সংগ্রহশালা',
+    bn: 'ঐতিহাসিক সংরক্ষিত ফলক · রংপুর সংগ্রহশালা',
     en: 'Historical Archival Registry Plate · Rangpur Preserved Collection',
   },
   'hero.portraitBadge': {
@@ -208,7 +208,7 @@ export const translations = {
   'writingDetail.textIntegrity': { bn: 'টেক্সট সংরক্ষণ স্থিতি', en: 'Text Integrity' },
   'writingDetail.fullTextAvail': { bn: 'সম্পূর্ণ পাঠ্য সংরক্ষিত', en: 'Full Archival Text Available' },
   'writingDetail.metaOnly': { bn: 'ক্যাটালগ বিবরণ সংরক্ষিত', en: 'Catalog Metadata Preserved' },
-  'writingDetail.preservationRecord': { bn: 'ঐতিহাসিক মহাফেজখানা সংরক্ষণ রেকর্ড', en: 'Archival Preservation Record' },
+  'writingDetail.preservationRecord': { bn: 'ঐতিহাসিক আর্কাইভ সংরক্ষণ রেকর্ড', en: 'Archival Preservation Record' },
   'writingDetail.notFoundTitle': { bn: 'প্রবন্ধটি খুঁজে পাওয়া যায়নি', en: 'Writing Record Not Located' },
   'writingDetail.notFoundMsg': { bn: 'অনুরোধকৃত প্রবন্ধের শিরোনাম বা আইডি আর্কাইভে খুঁজে পাওয়া যায়নি।', en: 'The essay or article identifier was not found in the archival index.' },
 
@@ -344,7 +344,7 @@ export const translations = {
   'contact.correspondenceAddress': { bn: 'দাপ্তরিক যোগাযোগ ঠিকানা', en: 'Archival Correspondence Address' },
   'contact.scholarsGuidelines': { bn: 'গবেষক ও জীবনীকারদের জন্য নির্দেশিকা', en: 'Guidelines for Scholars & Biographers' },
   'contact.guideline1': { bn: 'উচ্চতর গবেষকদের নিজ বিশ্ববিদ্যালয়ের বিভাগীয় প্রত্যয়নপত্র প্রদর্শন করতে হবে।', en: 'Graduate scholars must present an institutional letter of introduction from their university department.' },
-  'contact.guideline2': { bn: 'মূল হস্তলিখিত পাণ্ডুলিপিসমূহ মহাফেজখানার সংরক্ষিত কক্ষে তত্ত্বাবধানে দেখার নিয়ম প্রযোজ্য।', en: 'Handwritten original manuscripts are examined in the reading room under preservation supervision.' },
+  'contact.guideline2': { bn: 'মূল হস্তলিখিত পাণ্ডুলিপিসমূহ আর্কাইভের সংরক্ষিত কক্ষে তত্ত্বাবধানে দেখার নিয়ম প্রযোজ্য।', en: 'Handwritten original manuscripts are examined in the reading room under preservation supervision.' },
   'contact.guideline3': { bn: 'কোনো অপ্রকাশিত কবিতা বা দলিলের উদ্ধৃতি প্রকাশের জন্য পূর্বানুমতি আবশ্যক।', en: 'Reproduction or publication of excerpted poems and historical documents requires written estate consent.' },
   'contact.inquiryNote': { bn: 'সকল অনুসন্ধানের বার্তা দায়িত্বশীলভাবে পর্যালোচনা করা হয়।', en: 'Inquiries are received by the archive administration.' },
   'contact.fieldAcademic': { bn: 'ঐতিহাসিক ও আর্কাইভ গবেষণা', en: 'Historical & Archival Research' },
@@ -369,7 +369,7 @@ export const translations = {
   'search.archivedRecords': { bn: 'টি সংরক্ষিত রেকর্ড', en: 'archived records' },
 
   // State Feedback
-  'state.loading': { bn: 'মহাফেজখানা ও পাণ্ডুলিপির তথ্য আহরণ করা হচ্ছে...', en: 'Retrieving archival manuscripts and records...' },
+  'state.loading': { bn: 'আর্কাইভ ও পাণ্ডুলিপির তথ্য আহরণ করা হচ্ছে...', en: 'Retrieving archival manuscripts and records...' },
   'state.emptyTitle': { bn: 'কোনো আর্কাইভ রেকর্ড পাওয়া যায়নি', en: 'No Archival Records Found' },
   'state.emptyDesc': { bn: 'আপনার অনুসন্ধান বা ফিল্টারের সাথে মিলে এমন কোনো নথি পাওয়া যায়নি। ফিল্টার রিসেট করে আবার চেষ্টা করুন।', en: 'There are no items matching your criteria in this folio. Try clearing your filters or altering your search terms.' },
   'state.resetFilters': { bn: 'সকল ফিল্টার রিসেট করুন', en: 'Reset All Filters' },
@@ -403,7 +403,7 @@ export const translations = {
   // Footer
   'footer.colBio': { bn: 'জীবনী ও চিকিৎসা', en: 'Biography & Care' },
   'footer.colCreative': { bn: 'সাহিত্য ও শিল্পকর্ম', en: 'Creative Works' },
-  'footer.colArchive': { bn: 'আর্কাইভ ও মহাফেজখানা', en: 'Archive' },
+  'footer.colArchive': { bn: 'আর্কাইভ ও সংগ্রহশালা', en: 'Archive' },
   'footer.bioTimeline': { bn: 'জীবন ও সময়রেখা', en: 'Life & Timeline' },
   'footer.medicalService': { bn: 'চিকিৎসা সেবা', en: 'Medical Service' },
   'footer.awardsHonors': { bn: 'স্বীকৃতি ও পদক', en: 'Awards & Honors' },
@@ -414,7 +414,7 @@ export const translations = {
   'footer.docGallery': { bn: 'চিত্রশালা ও স্মারক', en: 'Document Gallery' },
   'footer.inquiries': { bn: 'গবেষণা অনুসন্ধান', en: 'Research Inquiries' },
   'footer.copyright': { bn: 'ডা. মোঃ মফিজুল ইসলাম মান্টু স্মৃতি সংরক্ষণ উদ্যোগ। রংপুর, বাংলাদেশ।', en: 'The Dr. Md. Mofizul Islam Mantu Archive. Rangpur, Bangladesh.' },
-  'footer.project': { bn: 'ঐতিহাসিক ও সাহিত্য স্মারক মহাফেজখানা', en: 'Historical & Literary Archive' },
+  'footer.project': { bn: 'ঐতিহাসিক ও সাহিত্য স্মারক আর্কাইভ', en: 'Historical & Literary Archive' },
 
   // 404 Page
   'notFound.kicker': { bn: 'ত্রুটি ৪০৪ · পৃষ্ঠা অপসারিত', en: 'ERROR 404 · RECORD NOT LOCATED' },

@@ -19,6 +19,7 @@ import { useAdmin } from '../context/AdminContext';
 
 export const HomePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [imageLoadError, setImageLoadError] = useState<boolean>(false);
   const { isBn, t, formatNumber } = useLanguage();
   const { getPublishedHeroPortrait } = useAdmin();
 
@@ -50,36 +51,23 @@ export const HomePage: React.FC = () => {
               <span>{t('hero.kicker')}</span>
             </div>
 
-            {/* Bilingual Name */}
+            {/* Monolingual Hero Name */}
             <div>
               {isBn ? (
-                <>
-                  <h1 className="font-bengali-heading text-3xl sm:text-5xl lg:text-6xl font-bold text-[#211F1C] tracking-tight leading-[1.15]">
-                    {ARCHIVE_META.nameBn}
-                  </h1>
-                  <p className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#211F1C]/90 font-medium mt-3 tracking-tight">
-                    {ARCHIVE_META.nameEn}
-                  </p>
-                </>
+                <h1 className="font-bengali-heading text-3xl sm:text-5xl lg:text-6xl font-bold text-[#211F1C] tracking-tight leading-[1.15]">
+                  {ARCHIVE_META.nameBn}
+                </h1>
               ) : (
-                <>
-                  <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-[#211F1C] tracking-tight leading-[1.15]">
-                    {ARCHIVE_META.nameEn}
-                  </h1>
-                  <p className="font-bengali-heading text-2xl sm:text-3xl lg:text-4xl text-[#211F1C]/90 font-medium mt-3 tracking-tight">
-                    {ARCHIVE_META.nameBn}
-                  </p>
-                </>
+                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-[#211F1C] tracking-tight leading-[1.15]">
+                  {ARCHIVE_META.nameEn}
+                </h1>
               )}
             </div>
 
             {/* Tagline */}
-            <div className="border-l-2 border-[#A84E36] pl-4 py-1 space-y-1">
+            <div className="border-l-2 border-[#A84E36] pl-4 py-1">
               <p className={`text-lg sm:text-xl text-[#A84E36] leading-snug ${isBn ? 'font-bengali-heading' : 'font-serif italic'}`}>
                 "{isBn ? ARCHIVE_META.taglineBn : ARCHIVE_META.taglineEn}"
-              </p>
-              <p className={`text-sm sm:text-base text-[#625D52] ${isBn ? 'font-serif italic' : 'font-bengali-text'}`}>
-                {isBn ? ARCHIVE_META.taglineEn : ARCHIVE_META.taglineBn}
               </p>
             </div>
 
@@ -108,7 +96,7 @@ export const HomePage: React.FC = () => {
           <div className="lg:col-span-5">
             <div className="relative mx-auto max-w-sm sm:max-w-md lg:max-w-none w-full">
               <div className="p-3 sm:p-4 bg-white/90 border border-[#211F1C]/20 rounded-xs shadow-xs">
-                {publishedPortrait ? (
+                {publishedPortrait && !imageLoadError ? (
                   /* =========================================================
                      PUBLISHED PHOTOGRAPHIC PORTRAIT (DR. MD. MOFIZUL ISLAM MANTU)
                      - Managed & published exclusively through the Admin Panel
@@ -122,6 +110,7 @@ export const HomePage: React.FC = () => {
                           ? publishedPortrait.altTextBn || publishedPortrait.altText || 'ডা. মোঃ মফিজুল ইসলাম মান্টুর আলোকচিত্র প্রতিকৃতি'
                           : publishedPortrait.altText || 'Archival photographic portrait of Dr. Md. Mofizul Islam Mantu'
                       }
+                      onError={() => setImageLoadError(true)}
                       className="w-full h-full object-cover object-top contrast-[1.02] brightness-[1.01] transition-transform duration-500 group-hover:scale-[1.01]"
                       loading="eager"
                       decoding="async"
@@ -143,7 +132,7 @@ export const HomePage: React.FC = () => {
                       </p>
                       <p className="text-[11px] text-[#EAE4D8] font-sans tracking-wide mt-0.5">
                         {isBn
-                          ? publishedPortrait.captionBn || 'ঐতিহাসিক প্রতিকৃতি · রংপুর মহাফেজখানা'
+                          ? publishedPortrait.captionBn || 'ঐতিহাসিক প্রতিকৃতি · রংপুর সংগ্রহশালা'
                           : publishedPortrait.caption || 'Authentic Archival Portrait · Rangpur Legacy'}
                       </p>
                     </div>
@@ -160,7 +149,7 @@ export const HomePage: React.FC = () => {
                     {/* Top Folio Header */}
                     <div className="w-full flex items-center justify-between text-[10px] uppercase font-mono tracking-widest text-[#8A8375]">
                       <span>{t('hero.plate')}</span>
-                      <span>{isBn ? 'ঐতিহাসিক মহাফেজখানা' : 'Rangpur Archive'}</span>
+                      <span>{isBn ? 'ঐতিহাসিক সংগ্রহশালা' : 'Rangpur Archive'}</span>
                     </div>
 
                     {/* Center: Medallion & Archival Identity */}
@@ -178,8 +167,8 @@ export const HomePage: React.FC = () => {
                         <h2 className={`text-xl sm:text-2xl font-semibold text-[#211F1C] ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
                           {isBn ? ARCHIVE_META.nameBn : ARCHIVE_META.nameEn}
                         </h2>
-                        <p className={`text-sm text-[#625D52] ${isBn ? 'font-serif' : 'font-bengali-text'}`}>
-                          {isBn ? ARCHIVE_META.nameEn : ARCHIVE_META.nameBn}
+                        <p className={`text-sm text-[#625D52] ${isBn ? 'font-bengali-text' : 'font-serif'}`}>
+                          {isBn ? ARCHIVE_META.taglineBn : ARCHIVE_META.taglineEn}
                         </p>
                         <p className="text-xs text-[#8A8375] font-sans">
                           {t('hero.roles')}

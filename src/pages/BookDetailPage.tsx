@@ -5,7 +5,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { CategoryLabel } from '../components/ui/CategoryLabel';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/StateFeedback';
-import { BOOKS_DATA } from '../data/archiveData';
+import { BOOKS_DATA, ARCHIVE_META } from '../data/archiveData';
 import { ArrowLeft, Quote, Info } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAdmin } from '../context/AdminContext';
@@ -94,15 +94,17 @@ export const BookDetailPage: React.FC = () => {
                 </div>
 
                 <div className="my-auto py-2">
-                  <h2 className="font-bengali-heading text-2xl sm:text-3xl font-bold text-white leading-tight drop-shadow-sm">
-                    {book.titleBn}
+                  <h2 className={`text-2xl sm:text-3xl font-bold text-white leading-tight drop-shadow-sm ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
+                    {isBn ? book.titleBn : book.title}
                   </h2>
-                  <p className="font-serif italic text-sm sm:text-base text-white/90 mt-3 font-normal">
-                    {book.title}
-                  </p>
+                  {(isBn ? book.subtitleBn : book.subtitle) && (
+                    <p className={`text-sm sm:text-base text-white/90 mt-3 font-normal ${isBn ? 'font-bengali-text' : 'font-serif italic'}`}>
+                      {isBn ? book.subtitleBn : book.subtitle}
+                    </p>
+                  )}
                   <div className="w-12 h-[1px] bg-white/40 mx-auto my-4" />
                   <p className="text-xs tracking-widest uppercase text-white/90 font-sans">
-                    ডা. মোঃ মফিজুল ইসলাম মান্টু
+                    {isBn ? ARCHIVE_META.nameBn : ARCHIVE_META.nameEn}
                   </p>
                 </div>
 

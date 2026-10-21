@@ -104,6 +104,13 @@ interface AdminContextType {
   deleteMedia: (id: string) => void;
 
   // Public Query Getters (Read-Only, Published Content Only)
+  serverHeroPortrait: PublishedHeroPortrait | null;
+  storageStatus: {
+    vercelBlobConfigured: boolean;
+    heroConfigured: boolean;
+    heroUrl: string | null;
+  } | null;
+  syncServerHeroPortrait: () => Promise<void>;
   getPublishedHeroPortrait: () => PublishedHeroPortrait | null;
   getPublishedBookCover: (bookSlug: string) => string | null;
   getPublishedGalleryItem: (idOrAccession: string) => SectionMediaResult | null;
@@ -303,7 +310,7 @@ const initialSettings: AdminSettings = {
   descriptionEn:
     'The official personal legacy archive of Dr. Md. Mofizul Islam Mantu — physician, poet, researcher, musician, and cultural activist from Rangpur, Bangladesh.',
   descriptionBn:
-    'চিকিৎসা, সাহিত্য, সংগীত ও জনসেবায় নিবেদিত এক বিরল বহুভাষিক ব্যক্তিত্ব — ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক ও মহাফেজখানা।',
+    'চিকিৎসা, সাহিত্য, সংগীত ও জনসেবায় নিবেদিত এক বিরল বহুভাষিক ব্যক্তিত্ব — ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক আর্কাইভ।',
   curatorName: 'Misbah Sakin (Archive Secretariat)',
   curatorNameBn: 'মিসবাহ সাকিন (আর্কাইভ দফতর ও তত্ত্বাবধায়ক)',
   curatorEmail: 'misbahsakin1@gmail.com',
@@ -315,7 +322,7 @@ const initialSettings: AdminSettings = {
   citationPolicy:
     'Materials from this archive may be cited in academic research, doctoral dissertations, and literary anthologies with formal credit to the "Dr. Md. Mofizul Islam Mantu Personal Legacy Archive, Rangpur".',
   citationPolicyBn:
-    'এই মহাফেজখানার দলিল ও প্রকাশনা গবেষণামূলক প্রবন্ধ, পিএইচডি অভিসন্দর্ভ এবং সাহিত্য সংকলনে ব্যবহারের ক্ষেত্রে "ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক আর্কাইভ, রংপুর" হিসেবে সুস্পষ্ট তথ্যসূত্র উল্লেখ করতে হবে।',
+    'এই আর্কাইভের দলিল ও প্রকাশনা গবেষণামূলক প্রবন্ধ, পিএইচডি অভিসন্দর্ভ এবং সাহিত্য সংকলনে ব্যবহারের ক্ষেত্রে "ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক আর্কাইভ, রংপুর" হিসেবে সুস্পষ্ট তথ্যসূত্র উল্লেখ করতে হবে।',
   navLabels: {
     home: 'Home (মূল পাতা)',
     biography: 'Biography (জীবনালেখ্য)',
@@ -349,7 +356,7 @@ const initialSettings: AdminSettings = {
   footerNoticeEn:
     'Dr. Md. Mofizul Islam Mantu Archive Estate. Non-commercial cultural and educational archive maintained in Rangpur, Bangladesh.',
   footerNoticeBn:
-    'ডা. মোঃ মফিজুল ইসলাম মান্টু মহাফেজখানা ও স্মারক তহবিল। অলাভজনক সাহিত্য, চিকিৎসা ও সাংস্কৃতিক মহাফেজখানা।',
+    'ডা. মোঃ মফিজুল ইসলাম মান্টু স্মারক আর্কাইভ। অলাভজনক সাহিত্য, চিকিৎসা ও সাংস্কৃতিক স্মৃতি সংরক্ষণ উদ্যোগ।',
 };
 
 const initialActivityLogs: ActivityLogItem[] = [
@@ -495,7 +502,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           year: '1976',
           medium: 'Preserved Photographic Print',
           caption: 'Archival photographic portrait preserved in the Rangpur collection.',
-          captionBn: 'রংপুর মহাফেজখানায় সংরক্ষিত ঐতিহাসিক আলোকচিত্র প্রতিকৃতি।',
+          captionBn: 'রংপুর সংগ্রহশালায় সংরক্ষিত ঐতিহাসিক আলোকচিত্র প্রতিকৃতি।',
           altText: 'Authentic photographic portrait of Dr. Md. Mofizul Islam Mantu',
           altTextBn: 'ডা. মোঃ মফিজুল ইসলাম মান্টুর আলোকচিত্র প্রতিকৃতি',
           fileSize: '1.8 MB',
@@ -541,6 +548,88 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [serverHeroPortrait, setServerHeroPortrait] = useState<PublishedHeroPortrait | null>(null);
+  const [storageStatus, setStorageStatus] = useState<{
+    vercelBlobConfigured: boolean;
+    heroConfigured: boolean;
+    heroUrl: string | null;
+  } | null>(null);
+
+  // Sync server-published hero portrait and system storage status globally (for mobile & all browsers)
+  const syncServerHeroPortrait = async () => {
+    try {
+      const res = await fetch('/api/public/hero-portrait');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.portrait && data.portrait.url) {
+          setServerHeroPortrait(data.portrait);
+          // Ensure mediaItems locally contains the global published portrait
+          setMediaItems((prev) => {
+            const hasHero = prev.some(
+              (m) =>
+                m.assignment.section === 'hero' &&
+                m.status === 'published' &&
+                m.url === data.portrait.url
+            );
+            if (hasHero) return prev;
+
+            const existingHeroIdx = prev.findIndex((m) => m.assignment.section === 'hero');
+            const heroItem: AdminMediaItem = {
+              id: existingHeroIdx >= 0 ? prev[existingHeroIdx].id : 'media-hero-portrait-global',
+              title: data.portrait.title || 'Authentic Archival Portrait of Dr. Md. Mofizul Islam Mantu',
+              titleBn: data.portrait.titleBn || 'ডা. মোঃ মফিজুল ইসলাম মান্টুর আলোকচিত্র প্রতিকৃতি',
+              accessionNo: 'ACC-POR-1976-01',
+              category: 'Photographic Portrait',
+              year: '1976',
+              medium: 'Preserved Photographic Print',
+              caption:
+                data.portrait.caption ||
+                'Archival photographic portrait preserved in the Rangpur collection.',
+              captionBn:
+                data.portrait.captionBn ||
+                'রংপুর সংগ্রহশালায় সংরক্ষিত ঐতিহাসিক আলোকচিত্র প্রতিকৃতি।',
+              altText:
+                data.portrait.altText ||
+                'Archival photographic portrait of Dr. Md. Mofizul Islam Mantu',
+              altTextBn:
+                data.portrait.altTextBn || 'ডা. মোঃ মফিজুল ইসলাম মান্টুর আলোকচিত্র প্রতিকৃতি',
+              fileSize: 'Archival Master',
+              dimensions: '1800 × 2250 px',
+              aspectRatio: '4:5',
+              uploadedAt: new Date().toISOString().split('T')[0],
+              previewColor: '#DDD6C8',
+              url: data.portrait.url,
+              status: 'published',
+              assignment: {
+                section: 'hero',
+                targetId: 'hero-portrait',
+              },
+            };
+
+            if (existingHeroIdx >= 0) {
+              const clone = [...prev];
+              clone[existingHeroIdx] = { ...clone[existingHeroIdx], ...heroItem, url: data.portrait.url, status: 'published' };
+              return clone;
+            }
+            return [heroItem, ...prev];
+          });
+        }
+        if (typeof data.vercelBlobConfigured === 'boolean') {
+          setStorageStatus({
+            vercelBlobConfigured: data.vercelBlobConfigured,
+            heroConfigured: Boolean(data.portrait?.url),
+            heroUrl: data.portrait?.url || null,
+          });
+        }
+      }
+    } catch {
+      // Offline or network error
+    }
+  };
+
+  useEffect(() => {
+    syncServerHeroPortrait();
+  }, []);
 
   // Synchronize to localStorage
   useEffect(() => {
@@ -600,16 +689,21 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const item = mediaItems.find(
       (m) => m.assignment.section === 'hero' && m.status === 'published' && !!m.url
     );
-    if (!item || !item.url) return null;
-    return {
-      url: item.url,
-      altText: item.altText,
-      altTextBn: item.altTextBn,
-      caption: item.caption,
-      captionBn: item.captionBn,
-      title: item.title,
-      titleBn: item.titleBn,
-    };
+    if (item && item.url) {
+      return {
+        url: item.url,
+        altText: item.altText,
+        altTextBn: item.altTextBn,
+        caption: item.caption,
+        captionBn: item.captionBn,
+        title: item.title,
+        titleBn: item.titleBn,
+      };
+    }
+    if (serverHeroPortrait && serverHeroPortrait.url) {
+      return serverHeroPortrait;
+    }
+    return null;
   };
 
   const getPublishedBookCover = (bookSlug: string): string | null => {
@@ -785,7 +879,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Media CRUD & Management (Restricted to Authorized Administrators)
   const addMedia = (newMediaData: Omit<AdminMediaItem, 'id' | 'uploadedAt'>) => {
     if (!isAuthenticated) {
       showToast('Access Denied: Only authenticated administrators can add media records.', 'error');
@@ -794,9 +887,110 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const id = `media-${Date.now()}`;
     const today = new Date().toISOString().split('T')[0];
     const newMedia: AdminMediaItem = { ...newMediaData, id, uploadedAt: today };
-    setMediaItems((prev) => [newMedia, ...prev]);
+    setMediaItems((prev) => {
+      let updated = [newMedia, ...prev];
+      if (newMedia.assignment.section === 'hero' && newMedia.status === 'published') {
+        updated = updated.map((m) =>
+          m.id !== newMedia.id && m.assignment.section === 'hero'
+            ? { ...m, status: 'draft' as PublicationStatus }
+            : m
+        );
+      }
+      return updated;
+    });
+
+    if (newMedia.assignment.section === 'hero' && newMedia.status === 'published' && newMedia.url) {
+      const heroData = {
+        url: newMedia.url,
+        title: newMedia.title,
+        titleBn: newMedia.titleBn,
+        caption: newMedia.caption,
+        captionBn: newMedia.captionBn,
+        altText: newMedia.altText,
+        altTextBn: newMedia.altTextBn,
+      };
+      setServerHeroPortrait(heroData);
+      const token = localStorage.getItem('mantu_admin_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      fetch('/api/admin/hero-portrait', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ portrait: heroData }),
+      }).catch(() => {});
+    }
+
     addActivityLog('Created', newMedia.title, 'Media');
     showToast(`Artifact accession "${newMedia.accessionNo}" successfully registered.`);
+  };
+
+  // Client-side image optimization helper for high-speed delivery and storage reliability
+  const optimizeImageFile = (
+    file: File
+  ): Promise<{ dataUrl: string; width: number; height: number; sizeFormatted: string }> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read image file buffer from storage device.'));
+      reader.onload = () => {
+        const originalDataUrl = reader.result as string;
+        const img = new Image();
+        img.onerror = () => reject(new Error('Failed to decode image data.'));
+        img.onload = () => {
+          const origWidth = img.naturalWidth || 800;
+          const origHeight = img.naturalHeight || 1000;
+          const MAX_DIM = 1600;
+          let targetWidth = origWidth;
+          let targetHeight = origHeight;
+
+          if (origWidth > MAX_DIM || origHeight > MAX_DIM) {
+            if (origWidth > origHeight) {
+              targetHeight = Math.round((origHeight * MAX_DIM) / origWidth);
+              targetWidth = MAX_DIM;
+            } else {
+              targetWidth = Math.round((origWidth * MAX_DIM) / origHeight);
+              targetHeight = MAX_DIM;
+            }
+          }
+
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+              const compressed = canvas.toDataURL('image/jpeg', 0.88);
+              const approxBytes = Math.round((compressed.length * 3) / 4);
+              const sizeFormatted =
+                approxBytes > 1024 * 1024
+                  ? (approxBytes / (1024 * 1024)).toFixed(1) + ' MB'
+                  : (approxBytes / 1024).toFixed(0) + ' KB';
+              resolve({
+                dataUrl: compressed,
+                width: targetWidth,
+                height: targetHeight,
+                sizeFormatted,
+              });
+              return;
+            }
+          } catch {
+            // Fall through to original
+          }
+
+          resolve({
+            dataUrl: originalDataUrl,
+            width: origWidth,
+            height: origHeight,
+            sizeFormatted: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
+          });
+        };
+        img.src = originalDataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const uploadMediaFile = async (
@@ -817,122 +1011,153 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, error: errorMsg };
     }
 
-    // 2. Validate File Size (5.0 MB limit)
-    const MAX_BYTES = 5 * 1024 * 1024;
+    // 2. Validate File Size (10.0 MB hard limit before optimization)
+    const MAX_BYTES = 10 * 1024 * 1024;
     if (file.size > MAX_BYTES) {
       const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
-      const errorMsg = `File size (${sizeMb} MB) exceeds the 5.0 MB archival threshold. Please optimize the image before uploading.`;
+      const errorMsg = `File size (${sizeMb} MB) exceeds the archival limit. Please select an image under 10.0 MB.`;
       showToast(errorMsg, 'error');
       return { success: false, error: errorMsg };
     }
 
-    // 3. Process image buffer client-side
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onerror = () => {
-        const errorMsg = 'Failed to read image file buffer from storage device.';
-        showToast(errorMsg, 'error');
-        resolve({ success: false, error: errorMsg });
-      };
+    try {
+      // 3. Compress & optimize image client-side for rapid mobile delivery
+      const optimized = await optimizeImageFile(file);
+      const width = optimized.width;
+      const height = optimized.height;
+      const ratio = width / height;
+      let detectedAspect: AdminMediaItem['aspectRatio'] = '4:3';
+      if (Math.abs(ratio - 16 / 9) < 0.2) detectedAspect = '16:9';
+      else if (Math.abs(ratio - 4 / 5) < 0.15) detectedAspect = '4:5';
+      else if (Math.abs(ratio - 3 / 4) < 0.15) detectedAspect = '3:4';
+      else if (Math.abs(ratio - 1) < 0.15) detectedAspect = '1:1';
 
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        const img = new Image();
-        img.onload = async () => {
-          const width = img.naturalWidth;
-          const height = img.naturalHeight;
-          const ratio = width / height;
-          let detectedAspect: AdminMediaItem['aspectRatio'] = '4:3';
-          if (Math.abs(ratio - 16 / 9) < 0.2) detectedAspect = '16:9';
-          else if (Math.abs(ratio - 4 / 5) < 0.15) detectedAspect = '4:5';
-          else if (Math.abs(ratio - 3 / 4) < 0.15) detectedAspect = '3:4';
-          else if (Math.abs(ratio - 1) < 0.15) detectedAspect = '1:1';
+      const newId = `media-${Date.now()}`;
+      const today = new Date().toISOString().split('T')[0];
 
-          const sizeFormatted = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-          const newId = `media-${Date.now()}`;
-          const today = new Date().toISOString().split('T')[0];
+      // Prepare headers with Bearer token & credentials for serverless Vercel persistence
+      let targetUrl = optimized.dataUrl;
+      const token = localStorage.getItem('mantu_admin_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-          // Upload to Vercel Blob storage if available, otherwise retain inline data URL
-          let targetUrl = dataUrl;
-          try {
-            const uploadRes = await fetch('/api/upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                filename: file.name,
-                dataUrl,
-                contentType: file.type,
-              }),
-            });
-            if (uploadRes.ok) {
-              const uploadData = await uploadRes.json();
-              if (uploadData.url) {
-                targetUrl = uploadData.url;
-              }
-            }
-          } catch {
-            // Fallback silently to dataUrl in offline/local environments
-          }
-
-          const newItem: AdminMediaItem = {
-            id: newId,
-            title: payload.title.trim(),
-            titleBn: payload.titleBn?.trim() || undefined,
-            accessionNo: payload.accessionNo.trim(),
-            category: payload.category,
-            year: payload.year.trim() || String(new Date().getFullYear()),
-            medium: payload.medium.trim() || 'Digital Master Scan',
-            caption: payload.caption.trim() || payload.title.trim(),
-            captionBn: payload.captionBn?.trim() || undefined,
-            altText: payload.altText.trim() || payload.title.trim(),
-            altTextBn: payload.altTextBn?.trim() || undefined,
-            fileSize: sizeFormatted,
-            dimensions: `${width} × ${height} px`,
-            aspectRatio: detectedAspect,
-            uploadedAt: today,
-            previewColor: '#DDD6C8',
-            url: targetUrl,
+      try {
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({
+            filename: file.name,
+            dataUrl: optimized.dataUrl,
+            contentType: 'image/jpeg',
+            section: payload.section,
             status: payload.status,
-            assignment: {
-              section: payload.section,
-              targetId: payload.targetId,
-            },
-          };
+            title: payload.title,
+            titleBn: payload.titleBn,
+            caption: payload.caption,
+            captionBn: payload.captionBn,
+            altText: payload.altText,
+            altTextBn: payload.altTextBn,
+            targetId: payload.targetId,
+            year: payload.year,
+            medium: payload.medium,
+            category: payload.category,
+            accessionNo: payload.accessionNo,
+          }),
+        });
 
-          setMediaItems((prev) => {
-            let updated = [newItem, ...prev];
-            // If assigned to hero and published, ensure existing hero items are set to draft so only one is active
-            if (payload.section === 'hero' && payload.status === 'published') {
-              updated = updated.map((m) =>
-                m.id !== newItem.id && m.assignment.section === 'hero'
-                  ? { ...m, status: 'draft' as PublicationStatus }
-                  : m
-              );
-            }
-            return updated;
-          });
-
-          // If assigned to a book, also update that book's coverImage
-          if (payload.section === 'books' && payload.targetId) {
-            setBooks((prevBooks) =>
-              prevBooks.map((b) =>
-                b.slug === payload.targetId ? { ...b, coverImage: targetUrl } : b
-              )
-            );
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          if (uploadData.url) {
+            targetUrl = uploadData.url;
           }
+          if (uploadData.heroPortrait && payload.section === 'hero' && payload.status === 'published') {
+            setServerHeroPortrait(uploadData.heroPortrait);
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('[Upload] Server upload error, using optimized dataUrl:', uploadErr);
+      }
 
-          addActivityLog('Created', newItem.title, 'Media');
-          showToast(
-            `Image "${newItem.title}" (${sizeFormatted}) registered${
-              payload.status === 'published' ? ' and published to archive' : ' as draft'
-            }.`
-          );
-          resolve({ success: true, item: newItem });
-        };
-        img.src = dataUrl;
+      const newItem: AdminMediaItem = {
+        id: newId,
+        title: payload.title.trim(),
+        titleBn: payload.titleBn?.trim() || undefined,
+        accessionNo: payload.accessionNo.trim(),
+        category: payload.category,
+        year: payload.year.trim() || String(new Date().getFullYear()),
+        medium: payload.medium.trim() || 'Digital Master Scan',
+        caption: payload.caption.trim() || payload.title.trim(),
+        captionBn: payload.captionBn?.trim() || undefined,
+        altText: payload.altText.trim() || payload.title.trim(),
+        altTextBn: payload.altTextBn?.trim() || undefined,
+        fileSize: optimized.sizeFormatted,
+        dimensions: `${width} × ${height} px`,
+        aspectRatio: detectedAspect,
+        uploadedAt: today,
+        previewColor: '#DDD6C8',
+        url: targetUrl,
+        status: payload.status,
+        assignment: {
+          section: payload.section,
+          targetId: payload.targetId,
+        },
       };
-      reader.readAsDataURL(file);
-    });
+
+      setMediaItems((prev) => {
+        let updated = [newItem, ...prev];
+        if (payload.section === 'hero' && payload.status === 'published') {
+          updated = updated.map((m) =>
+            m.id !== newItem.id && m.assignment.section === 'hero'
+              ? { ...m, status: 'draft' as PublicationStatus }
+              : m
+          );
+        }
+        return updated;
+      });
+
+      // If assigned to hero and published, broadcast globally
+      if (payload.section === 'hero' && payload.status === 'published') {
+        const portraitObj = {
+          url: targetUrl,
+          altText: newItem.altText,
+          altTextBn: newItem.altTextBn,
+          caption: newItem.caption,
+          captionBn: newItem.captionBn,
+          title: newItem.title,
+          titleBn: newItem.titleBn,
+        };
+        setServerHeroPortrait(portraitObj);
+
+        fetch('/api/admin/hero-portrait', {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({ portrait: portraitObj }),
+        }).catch(() => {});
+      }
+
+      // If assigned to a book, update that book's coverImage
+      if (payload.section === 'books' && payload.targetId) {
+        setBooks((prevBooks) =>
+          prevBooks.map((b) =>
+            b.slug === payload.targetId ? { ...b, coverImage: targetUrl } : b
+          )
+        );
+      }
+
+      addActivityLog('Created', newItem.title, 'Media');
+      showToast(
+        `Image "${newItem.title}" (${optimized.sizeFormatted}) registered${
+          payload.status === 'published' ? ' and published to archive' : ' as draft'
+        }.`
+      );
+      return { success: true, item: newItem };
+    } catch (e: any) {
+      const errorMsg = e.message || 'Failed to process image file.';
+      showToast(errorMsg, 'error');
+      return { success: false, error: errorMsg };
+    }
   };
 
   const replaceMediaFile = async (
@@ -952,75 +1177,96 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, error: errorMsg };
     }
 
-    const MAX_BYTES = 5 * 1024 * 1024;
-    if (file.size > MAX_BYTES) {
-      const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
-      const errorMsg = `File size (${sizeMb} MB) exceeds the 5.0 MB archival threshold.`;
+    try {
+      const optimized = await optimizeImageFile(file);
+      const width = optimized.width;
+      const height = optimized.height;
+
+      let targetUrl = optimized.dataUrl;
+      const token = localStorage.getItem('mantu_admin_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const current = mediaItems.find((m) => m.id === id);
+
+      try {
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({
+            filename: file.name,
+            dataUrl: optimized.dataUrl,
+            contentType: 'image/jpeg',
+            section: current?.assignment.section,
+            status: current?.status,
+            title: current?.title,
+            titleBn: current?.titleBn,
+            caption: current?.caption,
+            captionBn: current?.captionBn,
+            altText: current?.altText,
+            altTextBn: current?.altTextBn,
+          }),
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          if (uploadData.url) {
+            targetUrl = uploadData.url;
+          }
+        }
+      } catch {
+        // Fallback silently to optimized dataUrl
+      }
+
+      setMediaItems((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? {
+                ...m,
+                url: targetUrl,
+                fileSize: optimized.sizeFormatted,
+                dimensions: `${width} × ${height} px`,
+              }
+            : m
+        )
+      );
+
+      // If current is hero, broadcast update
+      if (current?.assignment.section === 'hero') {
+        const heroData = {
+          url: targetUrl,
+          title: current.title,
+          titleBn: current.titleBn,
+          caption: current.caption,
+          captionBn: current.captionBn,
+          altText: current.altText,
+          altTextBn: current.altTextBn,
+        };
+        setServerHeroPortrait(heroData);
+        fetch('/api/admin/hero-portrait', {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({ portrait: heroData }),
+        }).catch(() => {});
+      }
+
+      if (current?.assignment.section === 'books' && current.assignment.targetId) {
+        setBooks((prev) =>
+          prev.map((b) =>
+            b.slug === current.assignment.targetId ? { ...b, coverImage: targetUrl } : b
+          )
+        );
+      }
+
+      addActivityLog('Updated', current?.title || 'Media File', 'Media');
+      showToast(`Image file for "${current?.title || 'Media'}" replaced successfully (${optimized.sizeFormatted}).`);
+      return { success: true };
+    } catch (e: any) {
+      const errorMsg = e.message || 'Failed to replace image file.';
       showToast(errorMsg, 'error');
       return { success: false, error: errorMsg };
     }
-
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        const img = new Image();
-        img.onload = async () => {
-          const width = img.naturalWidth;
-          const height = img.naturalHeight;
-          const sizeFormatted = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-
-          let targetUrl = dataUrl;
-          try {
-            const uploadRes = await fetch('/api/upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                filename: file.name,
-                dataUrl,
-                contentType: file.type,
-              }),
-            });
-            if (uploadRes.ok) {
-              const uploadData = await uploadRes.json();
-              if (uploadData.url) {
-                targetUrl = uploadData.url;
-              }
-            }
-          } catch {
-            // Fallback silently to dataUrl in offline/local environments
-          }
-
-          setMediaItems((prev) =>
-            prev.map((m) =>
-              m.id === id
-                ? {
-                    ...m,
-                    url: targetUrl,
-                    fileSize: sizeFormatted,
-                    dimensions: `${width} × ${height} px`,
-                  }
-                : m
-            )
-          );
-
-          const current = mediaItems.find((m) => m.id === id);
-          if (current?.assignment.section === 'books' && current.assignment.targetId) {
-            setBooks((prev) =>
-              prev.map((b) =>
-                b.slug === current.assignment.targetId ? { ...b, coverImage: targetUrl } : b
-              )
-            );
-          }
-
-          addActivityLog('Updated', current?.title || 'Media File', 'Media');
-          showToast(`Image file for "${current?.title || 'Media'}" replaced successfully (${sizeFormatted}).`);
-          resolve({ success: true });
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
-    });
   };
 
   const updateMedia = (id: string, updates: Partial<AdminMediaItem>) => {
@@ -1051,6 +1297,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       })
     );
 
+    // If publishing hero, sync with server globally
+    if (target.assignment.section === 'hero' && target.url) {
+      const heroData = {
+        url: target.url,
+        title: target.title,
+        titleBn: target.titleBn,
+        caption: target.caption,
+        captionBn: target.captionBn,
+        altText: target.altText,
+        altTextBn: target.altTextBn,
+      };
+      setServerHeroPortrait(heroData);
+      const token = localStorage.getItem('mantu_admin_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      fetch('/api/admin/hero-portrait', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ portrait: heroData }),
+      }).catch(() => {});
+    }
+
     // If target was assigned to a book, update that book's coverImage
     if (target.assignment.section === 'books' && target.assignment.targetId && target.url) {
       setBooks((prev) =>
@@ -1070,6 +1339,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setMediaItems((prev) =>
       prev.map((m) => (m.id === id ? { ...m, status: 'draft' as PublicationStatus } : m))
     );
+
+    // If unpublishing hero, clear server hero portrait
+    if (target.assignment.section === 'hero') {
+      setServerHeroPortrait(null);
+    }
 
     // If target was assigned to a book, clear book's coverImage
     if (target.assignment.section === 'books' && target.assignment.targetId) {
@@ -1102,6 +1376,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return m;
       })
     );
+
+    // If assigning to hero and published, broadcast globally
+    if (section === 'hero' && target.status === 'published' && target.url) {
+      const heroData = {
+        url: target.url,
+        title: target.title,
+        titleBn: target.titleBn,
+        caption: target.caption,
+        captionBn: target.captionBn,
+        altText: target.altText,
+        altTextBn: target.altTextBn,
+      };
+      setServerHeroPortrait(heroData);
+      const token = localStorage.getItem('mantu_admin_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      fetch('/api/admin/hero-portrait', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ portrait: heroData }),
+      }).catch(() => {});
+    }
 
     // If assigning to a book, update the book's coverImage (if published)
     if (section === 'books' && targetId) {
@@ -1200,6 +1497,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         assignMedia,
         removeMediaAssignment,
         deleteMedia,
+        serverHeroPortrait,
+        storageStatus,
+        syncServerHeroPortrait,
         getPublishedHeroPortrait,
         getPublishedBookCover,
         getPublishedGalleryItem,

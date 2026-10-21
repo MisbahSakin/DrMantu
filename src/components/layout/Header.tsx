@@ -38,8 +38,8 @@ export const Header: React.FC = () => {
                   <span className="font-bengali-heading text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-[#211F1C] group-hover:text-[#A84E36] transition-colors leading-tight truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
                     {ARCHIVE_META.nameBn}
                   </span>
-                  <span className="font-serif text-[11px] sm:text-xs text-[#625D52] tracking-normal -mt-0.5 truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
-                    {ARCHIVE_META.nameEn}
+                  <span className="font-bengali-text text-[11px] sm:text-xs text-[#625D52] tracking-normal -mt-0.5 truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
+                    ঐতিহাসিক ও সাহিত্য স্মারক আর্কাইভ
                   </span>
                 </>
               ) : (
@@ -47,8 +47,8 @@ export const Header: React.FC = () => {
                   <span className="font-serif text-base xs:text-lg sm:text-2xl font-bold tracking-tight text-[#211F1C] group-hover:text-[#A84E36] transition-colors leading-tight truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
                     {ARCHIVE_META.nameEn}
                   </span>
-                  <span className="font-bengali-text text-[11px] sm:text-xs text-[#625D52] tracking-normal -mt-0.5 truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
-                    {ARCHIVE_META.nameBn}
+                  <span className="font-sans text-[11px] sm:text-xs text-[#625D52] tracking-normal -mt-0.5 truncate max-w-[170px] xs:max-w-[240px] sm:max-w-none">
+                    Archive & Legacy · Rangpur
                   </span>
                 </>
               )}

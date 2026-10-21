@@ -28,6 +28,7 @@ export const AdminLoginPage: React.FC = () => {
       try {
         const res = await fetch('/api/admin/login', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
@@ -36,6 +37,11 @@ export const AdminLoginPage: React.FC = () => {
           const data = await res.json();
           if (data.success) {
             authenticated = true;
+            if (data.token) {
+              try {
+                localStorage.setItem('mantu_admin_token', data.token);
+              } catch {}
+            }
           }
         }
       } catch {
@@ -102,7 +108,7 @@ export const AdminLoginPage: React.FC = () => {
               ম
             </div>
             <div className="text-[11px] uppercase tracking-widest text-[#A84E36] font-bold">
-              {isBn ? 'মহাফেজখানা প্রশাসন' : 'Archival Administration'}
+              {isBn ? 'আর্কাইভ প্রশাসন' : 'Archival Administration'}
             </div>
             <h1 className={`text-2xl font-semibold text-[#211F1C] ${isBn ? 'font-bengali-heading' : 'font-serif'}`}>
               {isBn ? 'প্রশাসনিক প্যানেল প্রবেশ' : 'Sign In to Archive Console'}

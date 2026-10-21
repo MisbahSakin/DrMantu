@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
               {isBn ? ARCHIVE_META.nameBn : ARCHIVE_META.nameEn}
             </h3>
             <p className="text-sm text-[#625D52]">
-              {isBn ? ARCHIVE_META.nameEn : ARCHIVE_META.nameBn}
+              {isBn ? 'ঐতিহাসিক ও সাহিত্য স্মারক আর্কাইভ · রংপুর, বাংলাদেশ' : 'Historical & Literary Archive · Rangpur, Bangladesh'}
             </p>
             <p className="text-xs text-[#8A8375] font-serif italic pt-1">
               "{isBn ? ARCHIVE_META.taglineBn : ARCHIVE_META.taglineEn}"

@@ -188,7 +188,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ item, className = '' }
                   "{item.caption}"
                 </p>
                 <div className="mt-4 text-xs font-mono text-[#8A8375]">
-                  {isBn ? 'মহাফেজখানা ফলক' : 'Archival Plate'} · {item.aspectRatio} · {item.medium}
+                  {isBn ? 'সংরক্ষিত ফলক' : 'Archival Plate'} · {item.aspectRatio} · {item.medium}
                 </div>
               </div>
             )}
