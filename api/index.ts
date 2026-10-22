@@ -36,14 +36,14 @@ app.use(cookieParser());
 // -----------------------------------------------------------------------------
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'curator@drmofizulmantu.org').toLowerCase().trim();
 const CURATOR_EMAIL = (process.env.CURATOR_EMAIL || process.env.ADMIN_EMAIL || 'misbahsakin1@gmail.com').toLowerCase().trim();
-const AUTH_SECRET = process.env.AUTH_SECRET || 'mantu_archive_default_secure_secret_2026_dev_key';
+// No default: without AUTH_SECRET no session can be issued or verified
+const AUTH_SECRET = process.env.AUTH_SECRET || '';
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
 const HERO_PORTRAIT_URL = (process.env.HERO_PORTRAIT_URL || '').trim();
 
-// Supports either plain ADMIN_PASSWORD or bcrypt hash
+// Supports either plain ADMIN_PASSWORD or bcrypt ADMIN_PASSWORD_HASH. Neither set = login disabled.
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const DEFAULT_DEV_HASH = '$2b$10$vK9dVFUCVqOUyb.0IJeeHuMYi/zdmErcZ4HV3E6/VYqOvpYKQMFdW';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || (ADMIN_PASSWORD ? '' : DEFAULT_DEV_HASH);
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 
 // -----------------------------------------------------------------------------
 // Rate Limiter / Brute-force Protection (in-memory sliding window)
@@ -116,14 +116,16 @@ function createSignedToken(email: string): string {
 }
 
 function verifySignedToken(token: string): { email: string; exp: number } | null {
-  if (!token || !token.includes('.')) return null;
+  if (!AUTH_SECRET || !token || !token.includes('.')) return null;
   const [encodedPayload, signature] = token.split('.');
   const expectedSig = crypto
     .createHmac('sha256', AUTH_SECRET)
     .update(encodedPayload)
     .digest('base64url');
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+  const sigBuf = Buffer.from(signature || '');
+  const expectedBuf = Buffer.from(expectedSig);
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
     return null;
   }
 
@@ -141,14 +143,7 @@ function verifySignedToken(token: string): { email: string; exp: number } | null
 const isAuthorizedAdminEmail = (email?: string): boolean => {
   if (!email) return false;
   const normalized = email.toLowerCase().trim();
-  return (
-    normalized === ADMIN_EMAIL ||
-    normalized === CURATOR_EMAIL ||
-    normalized === 'curator@drmofizulmantu.org' ||
-    normalized === 'admin@drmofizulmantu.org' ||
-    normalized === 'misbahsakin1@gmail.com' ||
-    normalized.endsWith('@drmofizulmantu.org')
-  );
+  return normalized === ADMIN_EMAIL || normalized === CURATOR_EMAIL;
 };
 
 // -----------------------------------------------------------------------------
@@ -581,6 +576,11 @@ apiRouter.post('/admin/login', loginRateLimiter, async (req: Request, res: Respo
     return;
   }
 
+  if (!AUTH_SECRET || (!ADMIN_PASSWORD && !ADMIN_PASSWORD_HASH)) {
+    res.status(503).json({ error: 'Admin login is not configured (set AUTH_SECRET and ADMIN_PASSWORD).' });
+    return;
+  }
+
   const normalizedEmail = String(email).toLowerCase().trim();
 
   if (!isAuthorizedAdminEmail(normalizedEmail)) {
@@ -602,23 +602,10 @@ apiRouter.post('/admin/login', loginRateLimiter, async (req: Request, res: Respo
 
     if (
       !passwordValid &&
-      (password === 'ArchiveCurator2026!' ||
-        password === 'ArchiveAdmin2026!' ||
-        password === 'mantu2026')
-    ) {
-      passwordValid = true;
-    }
-
-    if (
-      !passwordValid &&
       ADMIN_PASSWORD_HASH &&
       (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$'))
     ) {
       passwordValid = await bcrypt.compare(String(password), ADMIN_PASSWORD_HASH);
-    }
-
-    if (!passwordValid && !ADMIN_PASSWORD && password.length >= 6) {
-      passwordValid = true;
     }
 
     if (!passwordValid) {

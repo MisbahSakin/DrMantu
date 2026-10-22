@@ -456,11 +456,39 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentUser(null);
     try {
       localStorage.setItem('mantu_admin_auth_v2', 'false');
+      localStorage.removeItem('mantu_admin_token');
     } catch {
       // ignore
     }
+    fetch('/api/admin/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     showToast('Signed out of administrative console.', 'info');
   };
+
+  // localStorage flag is only a hint; the server session decides
+  useEffect(() => {
+    const token = localStorage.getItem('mantu_admin_token');
+    fetch('/api/admin/session', {
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+          setCurrentUser({ name: 'Misbah Sakin', email: data.user.email, role: 'Administrator' });
+        } else {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          try {
+            localStorage.setItem('mantu_admin_auth_v2', 'false');
+            localStorage.removeItem('mantu_admin_token');
+          } catch {
+            // ignore
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // State with LocalStorage Synchronization
   const [books, setBooks] = useState<AdminBook[]>(() => {

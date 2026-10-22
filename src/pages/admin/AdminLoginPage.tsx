@@ -23,42 +23,25 @@ export const AdminLoginPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Attempt server-side authentication
+      // Server is the only authority on credentials
       let authenticated = false;
-      try {
-        const res = await fetch('/api/admin/login', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) {
-            authenticated = true;
-            if (data.token) {
-              try {
-                localStorage.setItem('mantu_admin_token', data.token);
-              } catch {}
-            }
-          }
+      let serverError = '';
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        authenticated = true;
+        if (data.token) {
+          try {
+            localStorage.setItem('mantu_admin_token', data.token);
+          } catch {}
         }
-      } catch {
-        // Network or offline: fall through to local verification
-      }
-
-      // 2. If server route is not configured or offline, support authenticated admin passkey or curator login
-      if (!authenticated) {
-        // Local credential check fallback
-        if (
-          (email.trim().toLowerCase() === 'curator@drmofizulmantu.org' ||
-            email.trim().toLowerCase() === 'admin@drmofizulmantu.org' ||
-            email.includes('@')) &&
-          password.length >= 6
-        ) {
-          authenticated = true;
-        }
+      } else {
+        serverError = data.error || '';
       }
 
       if (authenticated) {
@@ -66,7 +49,9 @@ export const AdminLoginPage: React.FC = () => {
         navigate('/admin');
       } else {
         setErrorMessage(
-          isBn
+          serverError && res.status !== 401
+            ? serverError
+            : isBn
             ? 'প্রবেশাধিকার যাচাই ব্যর্থ হয়েছে। অনুগ্রহ করে ইমেইল ও পাসওয়ার্ড সঠিকভাবে পরীক্ষা করুন।'
             : 'Authentication failed. Please verify your administrator credentials.'
         );
