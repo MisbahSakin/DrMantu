@@ -189,6 +189,7 @@ interface ServerPublishedPortrait {
 interface ServerArchiveRegistry {
   heroPortrait: ServerPublishedPortrait | null;
   mediaItems: any[];
+  books: any[];
   updatedAt: string;
 }
 
@@ -221,6 +222,7 @@ let serverRegistry: ServerArchiveRegistry = {
       }
     : null,
   mediaItems: [],
+  books: [],
   updatedAt: new Date().toISOString(),
 };
 
@@ -236,6 +238,7 @@ try {
       if (Array.isArray(parsed.mediaItems) && parsed.mediaItems.length > 0) {
         serverRegistry.mediaItems = parsed.mediaItems;
       }
+      if (Array.isArray(parsed.books)) serverRegistry.books = parsed.books;
       serverRegistry.updatedAt = parsed.updatedAt || new Date().toISOString();
     }
   }
@@ -265,6 +268,8 @@ async function persistRegistry(data: ServerArchiveRegistry): Promise<void> {
         contentType: 'application/json',
         token: blobToken,
         addRandomSuffix: false,
+        allowOverwrite: true,
+        cacheControlMaxAge: 60,
       });
       console.log('[Server] Successfully synchronized registry to Vercel Blob storage');
     } catch (e) {
@@ -289,13 +294,14 @@ async function syncFromBlobIfAvailable(force = false): Promise<void> {
     const result = await list({ prefix: 'archive/registry', token: blobToken });
     const registryBlob = result.blobs.find((b) => b.pathname.includes('registry.json'));
     if (registryBlob?.url) {
-      const res = await fetch(registryBlob.url);
+      const res = await fetch(registryBlob.url, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (data && (data.heroPortrait || data.mediaItems)) {
+        if (data && (data.heroPortrait || data.mediaItems || data.books)) {
           serverRegistry = {
             heroPortrait: data.heroPortrait || serverRegistry.heroPortrait,
             mediaItems: Array.isArray(data.mediaItems) ? data.mediaItems : serverRegistry.mediaItems,
+            books: Array.isArray(data.books) ? data.books : serverRegistry.books,
             updatedAt: data.updatedAt || new Date().toISOString(),
           };
           console.log('[Server] Restored archive registry from Vercel Blob storage');
@@ -435,6 +441,7 @@ apiRouter.get('/public/media', async (_req: Request, res: Response) => {
   res.json({
     success: true,
     media: serverRegistry.mediaItems,
+    books: serverRegistry.books,
     heroPortrait: serverRegistry.heroPortrait,
     vercelBlobConfigured: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
   });
@@ -443,6 +450,8 @@ apiRouter.get('/public/media', async (_req: Request, res: Response) => {
 // Admin: Publish / Update Hero Portrait Globally
 apiRouter.post('/admin/hero-portrait', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
+    // Load latest registry first so a cold instance doesn't overwrite it with empty state
+    await syncFromBlobIfAvailable(true);
     const { portrait } = req.body;
     if (!portrait || !portrait.url) {
       res.status(400).json({ error: 'Missing portrait data or image URL.' });
@@ -475,9 +484,12 @@ apiRouter.post('/admin/hero-portrait', requireAdminAuth, async (req: Request, re
 // Admin: Sync Media Items to Server Registry
 apiRouter.post('/admin/media', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { mediaItems, heroPortrait } = req.body;
+    // Load latest registry first so a cold instance doesn't overwrite it with empty state
+    await syncFromBlobIfAvailable(true);
+    const { mediaItems, books, heroPortrait } = req.body;
     if (heroPortrait) serverRegistry.heroPortrait = heroPortrait;
     if (Array.isArray(mediaItems)) serverRegistry.mediaItems = mediaItems;
+    if (Array.isArray(books)) serverRegistry.books = books;
     serverRegistry.updatedAt = new Date().toISOString();
 
     await persistRegistry(serverRegistry);
@@ -509,27 +521,27 @@ apiRouter.post('/upload', requireAdminAuth, async (req: Request, res: Response):
       return;
     }
 
+    // Load latest registry first so a cold instance doesn't overwrite it with empty state
+    await syncFromBlobIfAvailable(true);
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    let finalUrl = dataUrl;
-    let provider = 'inline-data-url';
-
-    if (blobToken) {
-      const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        const mimeType = matches[1];
-        const buffer = Buffer.from(matches[2], 'base64');
-        const cleanFilename = (filename || `artifact-${Date.now()}.jpg`).replace(/[^a-zA-Z0-9.-]/g, '_');
-
-        const blob = await put(`archive/${cleanFilename}`, buffer, {
-          access: 'public',
-          contentType: contentType || mimeType,
-          token: blobToken,
-        });
-
-        finalUrl = blob.url;
-        provider = 'vercel-blob';
-      }
+    if (!blobToken) {
+      res.status(500).json({ error: 'Vercel Blob not configured (BLOB_READ_WRITE_TOKEN missing).' });
+      return;
     }
+    const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches) {
+      res.status(400).json({ error: 'Invalid image data URL.' });
+      return;
+    }
+    const cleanFilename = (filename || `artifact-${Date.now()}.jpg`).replace(/[^a-zA-Z0-9.-]/g, '_');
+    const blob = await put(`archive/${cleanFilename}`, Buffer.from(matches[2], 'base64'), {
+      access: 'public',
+      contentType: contentType || matches[1],
+      token: blobToken,
+      addRandomSuffix: true,
+    });
+    const finalUrl = blob.url;
+    const provider = 'vercel-blob';
 
     if (section === 'hero' && status === 'published') {
       serverRegistry.heroPortrait = {

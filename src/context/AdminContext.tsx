@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   AdminBook,
   AdminContentItem,
@@ -658,9 +658,49 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Media & books live on the server (Vercel Blob registry) so every browser/device sees the same images.
+  // localStorage is only a first-paint cache.
+  const serverMediaLoaded = useRef(false);
+
   useEffect(() => {
     syncServerHeroPortrait();
+    fetch('/api/public/media')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.media) && data.media.length > 0) setMediaItems(data.media);
+        if (Array.isArray(data?.books) && data.books.length > 0) setBooks(data.books);
+      })
+      .catch(() => {})
+      .finally(() => {
+        serverMediaLoaded.current = true;
+      });
   }, []);
+
+  // Admin edits are pushed to the server registry (debounced)
+  useEffect(() => {
+    if (!isAuthenticated || !serverMediaLoaded.current) return;
+    const timer = setTimeout(() => {
+      const token = localStorage.getItem('mantu_admin_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      fetch('/api/admin/media', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ mediaItems, books }),
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status));
+        })
+        .catch(() => {
+          showToast(
+            'Could not sync media to the server. Other devices will not see these changes. Re-upload any older images and try again.',
+            'warning'
+          );
+        });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [mediaItems, books, isAuthenticated]);
 
   // Synchronize to localStorage
   useEffect(() => {
@@ -1097,17 +1137,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }),
         });
 
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          if (uploadData.url) {
-            targetUrl = uploadData.url;
-          }
-          if (uploadData.heroPortrait && payload.section === 'hero' && payload.status === 'published') {
-            setServerHeroPortrait(uploadData.heroPortrait);
-          }
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok || !uploadData.url) {
+          throw new Error(uploadData.error || `Upload failed (${uploadRes.status}).`);
         }
-      } catch (uploadErr) {
-        console.warn('[Upload] Server upload error, using optimized dataUrl:', uploadErr);
+        targetUrl = uploadData.url;
+        if (uploadData.heroPortrait && payload.section === 'hero' && payload.status === 'published') {
+          setServerHeroPortrait(uploadData.heroPortrait);
+        }
+      } catch (uploadErr: any) {
+        const errorMsg = `Image upload to storage failed: ${uploadErr.message || uploadErr}`;
+        showToast(errorMsg, 'error');
+        return { success: false, error: errorMsg };
       }
 
       const newItem: AdminMediaItem = {
@@ -1239,14 +1280,15 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             altTextBn: current?.altTextBn,
           }),
         });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          if (uploadData.url) {
-            targetUrl = uploadData.url;
-          }
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok || !uploadData.url) {
+          throw new Error(uploadData.error || `Upload failed (${uploadRes.status}).`);
         }
-      } catch {
-        // Fallback silently to optimized dataUrl
+        targetUrl = uploadData.url;
+      } catch (uploadErr: any) {
+        const errorMsg = `Image upload to storage failed: ${uploadErr.message || uploadErr}`;
+        showToast(errorMsg, 'error');
+        return { success: false, error: errorMsg };
       }
 
       setMediaItems((prev) =>
